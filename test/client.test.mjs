@@ -9,6 +9,7 @@ import {
   ConnectionError,
   NotFoundError,
   PagePromise,
+  PermissionDeniedError,
   RateLimitError,
   TimeoutError,
   VERSION,
@@ -77,6 +78,13 @@ test('every endpoint is reachable', async () => {
   assert.equal((await client.endorsers.list({ q: 'labor' })).data[0].slug, 'sf-labor-council');
   assert.equal((await client.endorsers.get('sf-labor-council')).elections.length, 1);
   assert.equal((await client.endorsements.list({ contest: 4410 })).data.length, 4);
+  const endorsement = await client.endorsements.get(90211, { lang: 'es' });
+  assert.equal(endorsement.endorser.category.slug, 'labor');
+  assert.equal(endorsement.contest.election.slug, 'ca-2026-11-03-general');
+  assert.equal(endorsement.choice.ballot_designation, 'Transit Planner');
+  assert.equal(fake.requests.at(-1).path, '/v1/endorsements/90211');
+  assert.equal(fake.requests.at(-1).query.get('lang'), 'es');
+  await assert.rejects(client.endorsements.get(9031), (err) => err instanceof PermissionDeniedError && err.code === 'outside_purchase');
   assert.equal((await client.officeholders.list({ states: 'CA' })).data[0].person_id, 'p-1');
   assert.equal((await client.officeholders.get('p-1')).name, 'Alex Morgan');
   assert.equal((await client.events.list({ cursor: 'c0' })).data.length, 3);
@@ -189,6 +197,8 @@ test('groupByContest builds positions with ranked picks in order', () => {
   const groups = groupByContest([ENDORSEMENTS[1], ENDORSEMENTS[0], ENDORSEMENTS[2], ENDORSEMENTS[3]]);
   assert.deepEqual(groups.map((g) => g.contest.id), [4410, 9031]);
   const labor = groups[0].positions.find((p) => p.endorser.slug === 'sf-labor-council');
-  assert.deepEqual(labor.picks.map((p) => [p.rank, p.label]), [[1, 'Jane Doe'], [2, 'Sam Rivera']]);
+  assert.deepEqual(labor.picks.map((p) => [p.rank, p.label, p.endorsement_id]), [[1, 'Jane Doe', 90211], [2, 'Sam Rivera', 90212]]);
   assert.equal(groups[0].positions.length, 2);
+  assert.equal(groups[0].election.slug, 'ca-2026-11-03-general');
+  assert.deepEqual(groups[1].positions[0].picks.map((p) => p.measure_answer), ['yes']);
 });

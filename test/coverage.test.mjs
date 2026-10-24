@@ -20,6 +20,7 @@ const CALLS = {
   listEndorsers: (c, q) => c.endorsers.list(q),
   getEndorser: (c, q) => c.endorsers.get('sf-labor-council', q),
   listEndorsements: (c, q) => c.endorsements.list(q),
+  getEndorsement: (c, q) => c.endorsements.get(90211, q),
   listOfficeholders: (c, q) => c.officeholders.list(q),
   getOfficeholder: (c, q) => c.officeholders.get('4f6a2c1e-8b3d-4e5f-9a7b-1c2d3e4f5a6b', q),
   streamEvents: async (c, q) => {

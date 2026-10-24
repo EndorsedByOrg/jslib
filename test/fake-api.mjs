@@ -33,8 +33,11 @@ const yes = { ...choice(51001, 'Yes'), measure_answer: 'yes', candidate: null };
 const no = { ...choice(51002, 'No'), measure_answer: 'no', candidate: null };
 
 const endorsement = (id, endorser, contest, c, rank = null) => ({
-  id, rank, statement: null, source_url: null, published_on: '2026-09-18', endorser, contest,
-  choice: { id: c.id, label: c.label, measure_answer: c.measure_answer, option: null, withdrawn: false, candidate: c.candidate && { id: c.candidate.id, full_name: c.candidate.full_name }, party: null, party_label: null },
+  id, rank, published_on: '2026-09-18',
+  endorser: { id: endorser.id, slug: endorser.slug, name: endorser.name },
+  contest: { id: contest.id, title: contest.title },
+  election: { id: election.id, slug: election.slug, date: election.date },
+  choice: { id: c.id, label: c.label, measure_answer: c.measure_answer },
 });
 export const ENDORSEMENTS = [
   endorsement(90211, laborCouncil, supervisor, jane, 1),
@@ -126,6 +129,15 @@ export async function startFakeApi({ rateLimitFirst = 0, failFirst = 0 } = {}) {
       const endorser = url.searchParams.get('endorsers');
       return send(200, page(endorser ? ENDORSEMENTS.filter((e) => e.endorser.slug === endorser) : ENDORSEMENTS, url, 100));
     }
+    if (p === '/v1/endorsements/90211') {
+      return send(200, {
+        data: {
+          id: 90211, rank: 1, statement: null, source_url: 'https://sflaborcouncil.org/endorsements', published_on: '2026-09-18', retrieved_at: '2026-09-19T04:12:08.331Z',
+          endorser: { ...laborCouncil, description: null, website_url: 'https://sflaborcouncil.org', logo_url: null, party: null }, contest: supervisor, choice: jane,
+        },
+      });
+    }
+    if (p === '/v1/endorsements/9031') return error(403, 'outside_purchase', "Your account hasn't bought this endorsement's contest.");
     if (p === '/v1/events') {
       // Cursor "c<n>": events after n. Three events exist: 1, 2, 3.
       const after = Number((url.searchParams.get('cursor') ?? 'c0').slice(1));

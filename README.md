@@ -95,7 +95,8 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.endorserCategories.list({ lang })` | `GET /v1/endorser-categories` | `EndorserCategory[]` |
 | `client.endorsers.list(params)` | `GET /v1/endorsers` | pages of `Endorser` |
 | `client.endorsers.get(slug, { lang })` | `GET /v1/endorsers/{slug}` | `EndorserDetail` |
-| `client.endorsements.list(params)` | `GET /v1/endorsements` | pages of `Endorsement` |
+| `client.endorsements.list(params)` | `GET /v1/endorsements` | pages of `Endorsement` (the basics) |
+| `client.endorsements.get(id, { lang })` | `GET /v1/endorsements/{id}` | `EndorsementDetail` (the full record) |
 | `client.officeholders.list(params)` | `GET /v1/officeholders` | pages of `Officeholder` |
 | `client.officeholders.get(personId, { lang })` | `GET /v1/officeholders/{id}` | `OfficeholderDetail` |
 | `client.stream.connect(params, options)` | `GET /v1/stream` | a live `EndorsementStream` |
@@ -182,10 +183,18 @@ const { data: unions } = await client.endorsers.list({ categories: 'labor', stat
 const endorser = await client.endorsers.get('sf-labor-council');
 ```
 
-`client.endorsements.list()` returns one row per endorser and choice, each with its endorser,
-contest (with district and election) and choice. It is the way to sync everything. A ranked-choice
-endorsement of three candidates is three rows with ranks 1 to 3. `groupByContest()` turns rows back
-into positions:
+`client.endorsements.list()` returns one row per endorser and choice with the basics: the endorser,
+contest and election (ids, slugs and names), the choice and its rank. It is the way to sync
+everything. A ranked-choice endorsement of three candidates is three rows with ranks 1 to 3.
+`client.endorsements.get(id)` has the full record: the statement and source, the endorser's details,
+the contest with its district, election and voting rules, and the choice with its candidate.
+
+```js
+const e = await client.endorsements.get(90211);
+console.log(e.endorser.category.name, e.contest.vote_method, e.choice.candidate?.full_name, e.statement, e.source_url);
+```
+
+`groupByContest()` turns rows back into positions:
 
 ```js
 import { groupByContest } from 'ballotdata';

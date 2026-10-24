@@ -306,7 +306,7 @@ export interface Choice {
   party_label: string | null;
 }
 
-/** A contest without its choices, as embedded in an {@link Endorsement}. */
+/** A contest without its choices, as embedded in an {@link EndorsementDetail}. */
 export interface ContestBase {
   id: number;
   /** Title as printed on the ballot. */
@@ -416,23 +416,40 @@ export interface EndorserDetail extends EndorserRef {
 
 // ------------------------------------------------------------- endorsements
 
-/** The choice an {@link Endorsement} is for. */
-export interface EndorsedChoice {
-  id: number;
-  label: string;
-  measure_answer: MeasureAnswer | null;
-  option: 'none_of_these' | null;
-  withdrawn: boolean;
-  candidate: { id: number; full_name: string } | null;
-  party: Party | null;
-  party_label: string | null;
-}
-
 /**
- * One endorser's endorsement of one choice. A ranked-choice endorsement of
- * three candidates is three of these, with ranks 1 to 3.
+ * The basics of one endorser's endorsement of one choice, from
+ * {@link EndorsementsResource.list}. A ranked-choice endorsement of three
+ * candidates is three of these, with ranks 1 to 3. The full record is
+ * {@link EndorsementsResource.get}.
  */
 export interface Endorsement {
+  /** Endorsement id: `client.endorsements.get(id)` has the full record. */
+  id: number;
+  /** Ranked choice: the rank the endorser gave; null otherwise. */
+  rank: number | null;
+  /** When it was published. */
+  published_on: DateString | null;
+  /** Who made the endorsement. */
+  endorser: { id: number; slug: string; name: string };
+  /** The contest: `client.contests.get(id)` has its choices and every position. */
+  contest: { id: number; title: string };
+  /** The contest's election. */
+  election: { id: number; slug: string; date: DateString };
+  /** The choice endorsed: the candidate's ballot name, or Yes / No. */
+  choice: { id: number; label: string; measure_answer: MeasureAnswer | null };
+}
+
+/** Who made an endorsement, inside {@link EndorsementDetail}. */
+export interface EndorsementEndorser extends EndorserRef {
+  description: string | null;
+  website_url: string | null;
+  logo_url: string | null;
+  /** The party, for a party or party club. */
+  party: Party | null;
+}
+
+/** One endorsement in full, from {@link EndorsementsResource.get}. */
+export interface EndorsementDetail {
   id: number;
   /** Ranked choice: the rank the endorser gave; null otherwise. */
   rank: number | null;
@@ -441,9 +458,13 @@ export interface Endorsement {
   /** Where it was published. */
   source_url: string | null;
   published_on: DateString | null;
-  endorser: EndorserRef;
+  /** When BallotData collected it. */
+  retrieved_at: DateTimeString;
+  endorser: EndorsementEndorser;
+  /** The contest with its district, election and voting rules. */
   contest: ContestBase;
-  choice: EndorsedChoice;
+  /** The choice with its candidate and party. */
+  choice: Choice;
 }
 
 // ------------------------------------------------------------ officeholders
@@ -636,6 +657,9 @@ export interface ListContestsParams extends LangParams, PageParams {
 }
 
 /** Parameters for {@link ContestsResource.get}: which endorsers' positions to include. */
+/** Arguments for {@link EndorsementsResource.get}. */
+export type GetEndorsementParams = LangParams;
+
 export interface GetContestParams extends LangParams {
   /** Only endorsers in these categories. */
   categories?: ListParam;

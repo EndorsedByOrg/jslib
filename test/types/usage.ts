@@ -4,6 +4,7 @@ import {
   BallotData,
   NotFoundError,
   constructPostback,
+  groupByContest,
   type Contest,
   type EndorsementEvent,
   type Filter,
@@ -22,9 +23,18 @@ async function usage(): Promise<void> {
   for await (const e of client.endorsements.list({ states: 'CA', categories: ['labor'] })) {
     const rank: number | null = e.rank;
     const label: string = e.choice.label;
+    const election: string = e.election.slug;
     void rank;
     void label;
+    void election;
   }
+
+  const full = await client.endorsements.get(90211, { lang: 'es' });
+  const source: string | null = full.source_url;
+  const vote: 'plurality' | 'multi_seat' | 'ranked_choice' | 'approval' | 'yes_no' = full.contest.vote_method;
+  void source;
+  void vote;
+  for (const { contest, positions } of groupByContest([])) void [contest.title, positions[0]?.picks[0]?.endorsement_id];
 
   const detail = await client.contests.get(4410, { endorser_states: ['CA', 'national'] });
   detail.endorsements[0]?.picks.map((p) => p.measure_answer);
