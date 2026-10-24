@@ -21,6 +21,7 @@ jobs:
       - run: npm test
       - name: Check the tag matches package.json
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
-      - run: npm publish --provenance --access public
+      # npm only accepts provenance from public repositories.
+      - run: npm publish --access public ${{ github.event.repository.private && ' ' || '--provenance' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

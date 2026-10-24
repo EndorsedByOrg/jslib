@@ -5,7 +5,8 @@
 2. Merge to `main`.
 3. Tag it: `git tag v1.0.0 && git push origin v1.0.0`.
 
-The Release workflow then tests, builds and runs `npm publish --provenance --access public`. It
+The Release workflow then tests, builds and runs `npm publish --access public`, adding
+`--provenance` once this repository is public (npm refuses provenance from private repositories). It
 needs an npm automation token in the repository secret `NPM_TOKEN` (npmjs.com → Access Tokens →
 Generate New Token → Automation), from an npm account that owns the `ballotdata` package name.
 
