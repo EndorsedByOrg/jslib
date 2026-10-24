@@ -18,8 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org
+      # Trusted publishing (OIDC) needs npm 11.5.1 or newer.
+      - run: npm install -g npm@^11.5.1
       - name: Work out the tag
         id: tag
         run: |
@@ -35,7 +37,9 @@ jobs:
           fi
       - run: npm ci
       - run: npm test
-      # npm only accepts provenance from public repositories.
+      # With a trusted publisher set up on npmjs.com, npm signs in with this
+      # run's OIDC token and NPM_TOKEN isn't needed. npm only accepts
+      # provenance from public repositories.
       - run: npm publish --access public ${{ github.event.repository.private && ' ' || '--provenance' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
