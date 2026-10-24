@@ -1,11 +1,14 @@
 name: Release
 
+# Publishes to npm when a v* tag is pushed, or when run by hand from main
+# (Actions → Release → Run workflow), which tags the release itself.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write # tag the release when run by hand
   id-token: write # npm provenance
 
 jobs:
@@ -17,10 +20,27 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+      - name: Work out the tag
+        id: tag
+        run: |
+          tag="v$(node -p "require('./package.json').version")"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            test "$tag" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME doesn't match package.json ($tag)"; exit 1; }
+          else
+            test "$GITHUB_REF_NAME" = main || { echo "Run this from main"; exit 1; }
+            if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+              echo "$tag already exists; bump the version first"; exit 1
+            fi
+          fi
       - run: npm ci
       - run: npm test
-      - name: Check the tag matches package.json
-        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
-      - run: npm publish --provenance --access public
+      # npm only accepts provenance from public repositories.
+      - run: npm publish --access public ${{ github.event.repository.private && ' ' || '--provenance' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Tag the release
+        if: github.ref_type != 'tag'
+        run: |
+          git tag "${{ steps.tag.outputs.tag }}"
+          git push origin "${{ steps.tag.outputs.tag }}"
