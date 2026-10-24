@@ -183,9 +183,10 @@ Throws `NotFoundError`.
 
 ### `endorsements.list(params?, options?)` → `PagePromise<Endorsement>`
 
-`GET /v1/endorsements`. One row per endorser and choice, with its endorser, contest (district and
-election included) and choice. A ranked-choice endorsement of three candidates is three rows with
-ranks 1–3.
+`GET /v1/endorsements`. One row per endorser and choice, with the basics of each: `id`, `rank`,
+`published_on`, `endorser` (`id`, `slug`, `name`), `contest` (`id`, `title`), `election` (`id`,
+`slug`, `date`) and `choice` (`id`, `label`, `measure_answer`). A ranked-choice endorsement of three
+candidates is three rows with ranks 1–3. `endorsements.get(id)` has the full record.
 
 | Parameter | Type | |
 | --- | --- | --- |
@@ -201,6 +202,14 @@ ranks 1–3.
 | `lang` | `'en' \| 'es'` | |
 | `limit` | `number` | 1–500, default 100. |
 | `cursor` | `string` | |
+
+### `endorsements.get(id, { lang }?, options?)` → `Promise<EndorsementDetail>`
+
+`GET /v1/endorsements/{id}`. One endorsement in full: `statement`, `source_url`, `published_on`,
+`retrieved_at`, the `endorser` (with `category`, `description`, `website_url`, `logo_url`, `state`
+and `party`), the `contest` (a `ContestBase`, with its district, election and voting rules) and the
+`choice` (a `Choice`, with its candidate and party). Throws `NotFoundError`, or
+`PermissionDeniedError` (`outside_purchase`) when your account didn't buy its contest.
 
 ## `client.officeholders`
 
@@ -349,7 +358,7 @@ received. `SIGNATURE_HEADER` is `'BallotData-Signature'`. A `Postback` is
 
 | Function | |
 | --- | --- |
-| `groupByContest(endorsements)` | Groups `Endorsement` rows into `{ contest, positions: [{ endorser, picks }] }`, picks ranked first-to-last. |
+| `groupByContest(endorsements)` | Groups `Endorsement` rows into `ContestEndorsements`: `{ contest, election, positions: [{ endorser, picks }] }`, picks ranked first-to-last, each with its `endorsement_id`. |
 | `sortPicks(picks)` | Picks sorted by `rank` (unranked last, in their order). |
 | `parseSse(body)` | The SSE parser the stream uses: an async iterator of `{ event, data, id?, retry? }` from a byte stream. |
 | `encodeQuery(query)` | `URLSearchParams` the way the API wants them: lists joined with commas, booleans as `true`/`false`, dates as ISO. |
@@ -371,7 +380,8 @@ All exported from the package root. The main ones:
 | `District`, `Contest`, `ContestBase`, `ContestDetail`, `ContestDetails`, `Choice`, `Candidate` | Ballots. |
 | `Position`, `Pick` | An endorser's picks in a contest. |
 | `EndorserRef`, `Endorser`, `EndorserDetail`, `EndorserElection` | Endorsers. |
-| `Endorsement`, `EndorsedChoice` | Endorsements. |
+| `Endorsement`, `EndorsementDetail`, `EndorsementEndorser` | Endorsements. |
+| `ContestEndorsements`, `EndorsementPosition`, `EndorsementPick` | From `groupByContest`. |
 | `Officeholder`, `OfficeholderDetail` | Officeholders. |
 | `EndorsementEvent`, `EventsPage`, `Filter`, `Subscription`, `SubscriptionInput`, `Postback` | Stream. |
 | `List…Params`, `GetContestParams`, `StreamParams`, `ListEventsParams`, `CoverageParams`, `LangParams`, `PageParams` | Parameters. |

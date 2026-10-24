@@ -1,6 +1,6 @@
 {
   "name": "ballotdata",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Official JavaScript and TypeScript client for the BallotData API: U.S. ballots, endorsers, endorsements, officeholders, and the live Endorsement Stream.",
   "keywords": [
     "ballotdata",

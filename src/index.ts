@@ -30,6 +30,7 @@ export {
   TimeoutError,
 } from './errors.js';
 export { groupByContest, sortPicks } from './helpers.js';
+export type { ContestEndorsements, EndorsementPick, EndorsementPosition } from './helpers.js';
 export {
   PostbackSignatureError,
   SIGNATURE_HEADER,
