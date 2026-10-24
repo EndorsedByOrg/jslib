@@ -3,7 +3,8 @@
 1. Update `version` in `package.json` and `src/version.ts` (a test checks they match), and move the
    `CHANGELOG.md` entry out of "unreleased".
 2. Merge to `main`.
-3. Tag it: `git tag v1.0.0 && git push origin v1.0.0`.
+3. Either run the Release workflow from `main` (Actions → Release → Run workflow), which publishes
+   and then tags the commit `v<version>`, or tag it yourself: `git tag v1.0.0 && git push origin v1.0.0`.
 
 The Release workflow then tests, builds and runs `npm publish --access public`, adding
 `--provenance` once this repository is public (npm refuses provenance from private repositories). It
