@@ -20,4 +20,7 @@ turned on. A token that needs a one-time password fails with `EOTP`.
 To publish by hand instead: `npm login`, then `npm publish --access public` from a clean checkout of
 the tag. `prepack` builds `dist/` first.
 
+If the version is already on npm (published by hand), running the workflow from `main` skips
+publishing and only creates the tag.
+
 Check what will be published with `npm pack --dry-run`.

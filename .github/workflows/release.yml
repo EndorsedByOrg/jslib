@@ -27,6 +27,10 @@ jobs:
         run: |
           tag="v$(node -p "require('./package.json').version")"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          # Already on npm (say, published by hand): skip publishing, still tag.
+          if npm view "$(node -p "require('./package.json').name")@${tag#v}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          fi
           if [ "$GITHUB_REF_TYPE" = tag ]; then
             test "$tag" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME doesn't match package.json ($tag)"; exit 1; }
           else
@@ -40,7 +44,8 @@ jobs:
       # With a trusted publisher set up on npmjs.com, npm signs in with this
       # run's OIDC token and NPM_TOKEN isn't needed. npm only accepts
       # provenance from public repositories.
-      - run: npm publish --access public ${{ github.event.repository.private && ' ' || '--provenance' }}
+      - if: steps.tag.outputs.published != 'true'
+        run: npm publish --access public ${{ github.event.repository.private && ' ' || '--provenance' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Tag the release
