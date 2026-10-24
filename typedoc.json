@@ -1,0 +1,28 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/index.ts"
+  ],
+  "out": "docs/api",
+  "name": "ballotdata",
+  "readme": "README.md",
+  "projectDocuments": [
+    "docs/stream.md",
+    "docs/postbacks.md",
+    "docs/errors.md",
+    "docs/reference.md"
+  ],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "includeVersion": true,
+  "highlightLanguages": [
+    "bash",
+    "javascript",
+    "typescript",
+    "json",
+    "http",
+    "sh",
+    "ts",
+    "js"
+  ]
+}
