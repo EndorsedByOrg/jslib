@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.0 (unreleased)
+
+For BallotData API 1.3.0.
+
+- New `client.candidates.list()` and `client.candidates.get(id)`: candidates, and every endorsement
+  each one received.
+- New `client.changes.list({ since })`: every endorsement added, changed or deleted since a time,
+  with the values before and after.
+- New `client.endorsements.history(id)`: every change to one endorsement.
+- New `client.elections.export(slug, { format })`: a whole election as JSON, or CSV text.
+- New fields: `incumbent` and `vote_meaning` on choices; `ballot_text`, `full_text_url` and
+  `unopposed` on contests; `added_by` on endorsements and picks, `endorsement_id` on picks;
+  `endorsement_count` on `EndorserDetail`. Stream events carry `choice.incumbent`,
+  `endorsement.added_by`, and on updates `changed` and `previous`.
+- New parameters: `min_endorsements` on `client.endorsers.list()`, `changed_since` on
+  `client.endorsements.list()`.
+- An endorser's `endorsement_count` now counts contests (a ranked order or slate once).
+
 ## 2.0.0 (unreleased)
 
 For BallotData API 1.2.0.

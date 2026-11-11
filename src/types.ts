@@ -272,6 +272,10 @@ export interface ContestDetails {
   winners?: number;
   /** Kind of referendum. */
   ref_type?: string;
+  /** The candidates are known, but their party lines haven't been checked against a printed ballot yet. */
+  party_lines_unverified?: boolean;
+  /** `notice` where `description` summarizes an official notice (Ohio) instead of quoting the ballot. */
+  question_wording?: string;
   [key: string]: unknown;
 }
 
@@ -298,6 +302,10 @@ export interface Choice {
   ballot_designation: string | null;
   /** The candidate withdrew but is still printed on the ballot. */
   withdrawn: boolean;
+  /** The candidate holds this seat now: true or false where known, null where not yet (and for a measure answer). */
+  incumbent: boolean | null;
+  /** For a measure answer: what a Yes (or No) vote means, as the election office words it. */
+  vote_meaning: string | null;
   /** The candidate; null for a measure answer. */
   candidate: Candidate | null;
   /** The party (or party preference) printed beside the name. */
@@ -320,8 +328,14 @@ export interface ContestBase {
   ranks_allowed: number | null;
   /** The measure's letter or number: "K", "Prop 1". */
   measure_code: string | null;
-  /** Measure text or question, where the ballot prints one. */
+  /** A short description or question. For a measure with `ballot_text`, often a summary. */
   description: string | null;
+  /** A measure's wording exactly as printed on the ballot; null where BallotData doesn't have it yet. */
+  ballot_text: string | null;
+  /** The official full text of a measure. */
+  full_text_url: string | null;
+  /** A candidate contest with no more candidates still running than seats. Always false for measures. */
+  unopposed: boolean;
   /** Position on the printed ballot. */
   ballot_order: number | null;
   /** For a party primary, the party. */
@@ -340,6 +354,8 @@ export interface Contest extends ContestBase {
 
 /** One choice an endorser picked, inside a {@link Position}. */
 export interface Pick {
+  /** The endorsement's id (`client.endorsements.get(id)`). */
+  endorsement_id: number;
   /** The {@link Choice} endorsed. */
   choice_id: number;
   /** That choice's label. */
@@ -353,6 +369,7 @@ export interface Pick {
   source_url: string | null;
   /** When it was published. */
   published_on: DateString | null;
+  added_by: AddedBy;
 }
 
 /**
@@ -390,7 +407,7 @@ export interface Endorser extends EndorserRef {
   logo_url: string | null;
   /** The party, for a party or party club. */
   party: Party | null;
-  /** Endorsements this endorser has made, in every election. */
+  /** Contests this endorser takes a position in, across every election you can read. A ranked-choice order or vote-for-N slate counts once. */
   endorsement_count: number;
 }
 
@@ -410,11 +427,57 @@ export interface EndorserDetail extends EndorserRef {
   website_url: string | null;
   logo_url: string | null;
   party: Party | null;
+  /** Contests this endorser takes a position in, across every election you can read. */
+  endorsement_count: number;
   /** Elections the endorser has endorsed in, newest first. */
   elections: EndorserElection[];
 }
 
 // ------------------------------------------------------------- endorsements
+
+/**
+ * How an endorsement got here: `automatic` (added by BallotData's automatic
+ * watch of the endorser's own page), `staff` (entered by hand by BallotData
+ * staff) or `data_load` (loaded in a researched data pass).
+ */
+export type AddedBy = 'automatic' | 'staff' | 'data_load';
+
+/** The endorsement fields a change can touch. */
+export type HistoryField = 'choice_id' | 'rank' | 'statement' | 'source_url' | 'published_on';
+
+/** An endorsement's values at one point in time. */
+export interface HistoryValues {
+  choice_id: number;
+  /** That choice's label; null if the choice has since been removed from the ballot. */
+  choice_label: string | null;
+  rank: number | null;
+  statement: string | null;
+  source_url: string | null;
+  published_on: DateString | null;
+}
+
+/** One change to an endorsement, from {@link EndorsementsResource.history}. */
+export interface HistoryEntry {
+  /** When the change was made. */
+  at: DateTimeString;
+  change: 'created' | 'updated' | 'deleted';
+  /** For `updated`: the fields that changed. */
+  changed: HistoryField[];
+  /** The values before; null for `created`. */
+  before: HistoryValues | null;
+  /** The values after; null for `deleted`. */
+  after: HistoryValues | null;
+}
+
+/** One change to an endorsement, from {@link ChangesResource.list}. */
+export interface Change extends HistoryEntry {
+  /** The change's id: increasing and unique. */
+  id: number;
+  endorsement_id: number;
+  endorser: { id: number; slug: string | null; name: string | null; category: Category | null };
+  contest: { id: number; title: string };
+  election: { id: number; slug: string; date: DateString };
+}
 
 /**
  * The basics of one endorser's endorsement of one choice, from
@@ -429,6 +492,7 @@ export interface Endorsement {
   rank: number | null;
   /** When it was published. */
   published_on: DateString | null;
+  added_by: AddedBy;
   /** Who made the endorsement. */
   endorser: { id: number; slug: string; name: string };
   /** The contest: `client.contests.get(id)` has its choices and every position. */
@@ -460,6 +524,7 @@ export interface EndorsementDetail {
   published_on: DateString | null;
   /** When BallotData collected it. */
   retrieved_at: DateTimeString;
+  added_by: AddedBy;
   endorser: EndorsementEndorser;
   /** The contest with its district, election and voting rules. */
   contest: ContestBase;
@@ -531,7 +596,18 @@ export interface EndorsementEvent {
     statement: string | null;
     source_url: string | null;
     published_on: DateString | null;
+    added_by: AddedBy;
   };
+  /** For `endorsement.updated`: the fields that changed. Empty for other events. */
+  changed: HistoryField[];
+  /** For `endorsement.updated`: the values before the change; null for other events. */
+  previous: {
+    choice_id: number;
+    rank: number | null;
+    statement: string | null;
+    source_url: string | null;
+    published_on: DateString | null;
+  } | null;
   endorser: {
     id: number;
     slug: string | null;
@@ -559,6 +635,8 @@ export interface EndorsementEvent {
     candidate: { id: number; full_name: string } | null;
     party: { slug: string; name: string } | null;
     withdrawn: boolean | null;
+    /** The candidate holds the seat now: true or false where known, null where not (and for a measure answer). */
+    incumbent: boolean | null;
   };
 }
 
@@ -678,6 +756,8 @@ export interface ListEndorsersParams extends LangParams, PageParams {
   elections?: ListParam;
   /** Name contains (case-insensitive, up to 100 characters). */
   q?: string;
+  /** Only endorsers with at least this many contests (`endorsement_count`). Pass 5 to match endorsedby.org's default list. */
+  min_endorsements?: number;
 }
 
 /** Parameters for {@link EndorsementsResource.list}. Limit 1–500, default 100. */
@@ -693,8 +773,40 @@ export interface ListEndorsementsParams extends LangParams, PageParams {
   levels?: ListParam<Level>;
   /** Only this contest. */
   contest?: number;
+  /** Only endorsements added or changed at or after this time (ISO 8601, or a Date). */
+  changed_since?: string | Date;
   /** Only elections from yesterday on. */
   upcoming?: boolean;
+}
+
+/** Parameters for {@link ChangesResource.list}. Limit 1–1000, default 100. */
+export interface ListChangesParams extends PageParams {
+  /** Changes at or after this time (ISO 8601, or a Date). Required unless you pass a cursor. */
+  since?: string | Date;
+  categories?: ListParam;
+  endorsers?: ListParam;
+  elections?: ListParam;
+  /** States the contests are voted in. */
+  states?: ListParam<StateCode>;
+}
+
+/** Parameters for {@link CandidatesResource.list}. Limit 1–500, default 100. */
+export interface ListCandidatesParams extends LangParams, PageParams {
+  /** Name contains (case-insensitive, up to 100 characters). */
+  q?: string;
+  /** States the contests are voted in. */
+  states?: ListParam<StateCode>;
+  elections?: ListParam;
+  /** true: only incumbents; false: only candidates known not to hold the seat. */
+  incumbent?: boolean;
+  /** Only elections from yesterday on. */
+  upcoming?: boolean;
+}
+
+/** Parameters for {@link ElectionsResource.export}. */
+export interface ExportElectionParams extends LangParams {
+  /** `json` (the default) or `csv`. */
+  format?: 'json' | 'csv';
 }
 
 /** Parameters for {@link OfficeholdersResource.list}. Limit 1–500, default 100. */
@@ -773,4 +885,70 @@ export interface ResponseInfo {
   /** The X-Request-Id header. Quote it when you write to BallotData. */
   requestId: string | null;
   rateLimit: RateLimit;
+}
+
+// --------------------------------------------------------------- candidates
+
+/** A contest a candidate is on. */
+export interface CandidateContest {
+  contest: {
+    id: number;
+    title: string;
+    kind: ContestKind;
+    vote_method: VoteMethod;
+    votes_allowed: number | null;
+    ranks_allowed: number | null;
+  };
+  district: { id: number; ocd_id: string | null; name: string; level: Level; state: StateCode | null };
+  election: { id: number; slug: string; name: string; date: DateString };
+  choice: {
+    id: number;
+    label: string;
+    ballot_designation: string | null;
+    withdrawn: boolean;
+    party: Party | null;
+    party_label: string | null;
+  };
+  /** Endorsers who endorsed this candidate in this contest. */
+  endorsement_count: number;
+}
+
+/** A candidate, from {@link CandidatesResource.list}. */
+export interface CandidateSummary {
+  id: number;
+  full_name: string;
+  website_url: string | null;
+  photo_url: string | null;
+  /** Holds the seat now: true or false where known, null where not yet. */
+  incumbent: boolean | null;
+  /** The contests they're on that you can read, newest election first. */
+  contests: CandidateContest[];
+}
+
+/** One endorsement a candidate received. */
+export interface CandidateEndorsement {
+  endorsement_id: number;
+  endorser: EndorserRef;
+  rank: number | null;
+  statement: string | null;
+  source_url: string | null;
+  published_on: DateString | null;
+  added_by: AddedBy;
+}
+
+/** A candidate with every endorsement they received, from {@link CandidatesResource.get}. */
+export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
+  contests: (CandidateContest & { endorsements: CandidateEndorsement[] })[];
+}
+
+// ------------------------------------------------------------------ exports
+
+/** A contest in an {@link ElectionExport}: its election is given once at the top. */
+export type ExportContest = Omit<ContestBase, 'election'> & { choices: Choice[]; endorsements: Position[] };
+
+/** A whole election, from {@link ElectionsResource.export}. */
+export interface ElectionExport {
+  election: Election;
+  /** Every contest you can read, in ballot order: races from federal down, then measures. */
+  contests: ExportContest[];
 }

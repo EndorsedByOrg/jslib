@@ -113,6 +113,18 @@ when they last changed.
 | `limit` | `number` | 1–500, default 100. |
 | `cursor` | `string` | |
 
+### `elections.export(slug, params?, options?)` → `Promise<ElectionExport>` or `Promise<string>`
+
+`GET /v1/elections/{slug}/export`. A whole election: the `election`, and every contest you can read
+in it with its choices and every endorser's position, in ballot order. With `format: 'csv'`, the CSV
+text instead, one row per endorsement. Throws `NotFoundError`, or `PermissionDeniedError`
+(`outside_purchase`) when your account bought none of it.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `format` | `'json' \| 'csv'` | Default `json`. |
+| `lang` | `'en' \| 'es'` | |
+
 ## `client.contests`
 
 ### `contests.list(params?, options?)` → `PagePromise<Contest>`
@@ -166,6 +178,7 @@ an array of `{ endorser, picks }`). Throws `NotFoundError`.
 | `states` | `ListParam` | Home states, or `national`. |
 | `elections` | `ListParam` | Only endorsers with endorsements in these elections. |
 | `q` | `string` | Name contains (case-insensitive, up to 100 characters). |
+| `min_endorsements` | `number` | Only endorsers with at least this many contests. 5 matches endorsedby.org's default list. |
 | `lang` | `'en' \| 'es'` | |
 | `limit` | `number` | 1–500, default 100. |
 | `cursor` | `string` | |
@@ -198,6 +211,7 @@ candidates is three rows with ranks 1–3. `endorsements.get(id)` has the full r
 | `contest_kinds` | `ListParam<ContestKind>` | |
 | `levels` | `ListParam<Level>` | |
 | `contest` | `number` | Only this contest. |
+| `changed_since` | `string \| Date` | Only endorsements added or changed at or after this time. |
 | `upcoming` | `boolean` | |
 | `lang` | `'en' \| 'es'` | |
 | `limit` | `number` | 1–500, default 100. |
@@ -210,6 +224,52 @@ candidates is three rows with ranks 1–3. `endorsements.get(id)` has the full r
 and `party`), the `contest` (a `ContestBase`, with its district, election and voting rules) and the
 `choice` (a `Choice`, with its candidate and party). Throws `NotFoundError`, or
 `PermissionDeniedError` (`outside_purchase`) when your account didn't buy its contest.
+
+### `endorsements.history(id, options?)` → `Promise<HistoryEntry[]>`
+
+`GET /v1/endorsements/{id}/history`. Every change to one endorsement, oldest first: `at`, `change`
+(`created`, `updated` or `deleted`), `changed` (the fields an update changed), and `before` and
+`after` values. Works after the endorsement is deleted. Throws `NotFoundError`.
+
+## `client.changes`
+
+### `changes.list(params?, options?)` → `PagePromise<Change>`
+
+`GET /v1/changes`. Every endorsement added, changed or deleted since a time, oldest first, with the
+values before and after. Keep the last page's `next_cursor` and pass it next time.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `since` | `string \| Date` | Changes at or after this time. Required unless you pass a cursor. |
+| `categories` | `ListParam` | Endorser categories. |
+| `endorsers` | `ListParam` | Endorser slugs. |
+| `elections` | `ListParam` | Election slugs. |
+| `states` | `ListParam<StateCode>` | States the contests are voted in. |
+| `limit` | `number` | 1–1000, default 100. |
+| `cursor` | `string` | |
+
+## `client.candidates`
+
+### `candidates.list(params?, options?)` → `PagePromise<CandidateSummary>`
+
+`GET /v1/candidates`. Candidates, each with the contests they're on and how many endorsers backed
+them in each.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `q` | `string` | Name contains (case-insensitive, up to 100 characters). |
+| `states` | `ListParam<StateCode>` | States the contests are voted in. |
+| `elections` | `ListParam` | Election slugs. |
+| `incumbent` | `boolean` | `true` for only incumbents, `false` for only candidates known not to hold the seat. |
+| `upcoming` | `boolean` | |
+| `lang` | `'en' \| 'es'` | |
+| `limit` | `number` | 1–500, default 100. |
+| `cursor` | `string` | |
+
+### `candidates.get(id, { lang }?, options?)` → `Promise<CandidateDetail>`
+
+`GET /v1/candidates/{id}`. One candidate with every contest they're on and every endorsement they
+received in each. Throws `NotFoundError`, or `PermissionDeniedError` (`outside_purchase`).
 
 ## `client.officeholders`
 

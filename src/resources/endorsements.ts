@@ -1,8 +1,8 @@
 import type { PagePromise, RequestOptions } from '../core.js';
-import type { Endorsement, EndorsementDetail, GetEndorsementParams, ListEndorsementsParams } from '../types.js';
+import type { Endorsement, EndorsementDetail, GetEndorsementParams, HistoryEntry, ListEndorsementsParams } from '../types.js';
 import { Resource, seg } from './resource.js';
 
-/** `GET /v1/endorsements` and `GET /v1/endorsements/{id}`. */
+/** `GET /v1/endorsements`, `GET /v1/endorsements/{id}` and `GET /v1/endorsements/{id}/history`. */
 export class EndorsementsResource extends Resource {
   /**
    * Endorsements, one per endorser and choice, with the basics of each: the
@@ -11,7 +11,8 @@ export class EndorsementsResource extends Resource {
    * {@link EndorsementsResource.get} has the full record, and
    * `client.contests.get()` every position in a contest.
    *
-   * This is the way to sync everything, or to catch up after the stream.
+   * This is the way to sync everything; `changed_since` lists only what was
+   * added or changed since a time (`client.changes.list()` has deletions too).
    * Paged: limit 1–500, default 100; use 500 to sync with fewer requests.
    *
    * @example
@@ -39,6 +40,25 @@ export class EndorsementsResource extends Resource {
       method: 'GET',
       path: `/v1/endorsements/${seg(id)}`,
       query: { ...params },
+      options,
+    });
+    return res.data;
+  }
+
+  /**
+   * Every change to one endorsement, oldest first, with the values before and
+   * after, including its deletion. Works after an endorsement is deleted, so
+   * you can tell why an id stopped appearing.
+   *
+   * @throws {NotFoundError} when no endorsement has ever had that id.
+   * @example
+   * const history = await client.endorsements.history(90211);
+   * const last = history.at(-1);
+   */
+  async history(id: number, options?: RequestOptions): Promise<HistoryEntry[]> {
+    const res = await this.transport.request<{ data: HistoryEntry[] }>({
+      method: 'GET',
+      path: `/v1/endorsements/${seg(id)}/history`,
       options,
     });
     return res.data;
