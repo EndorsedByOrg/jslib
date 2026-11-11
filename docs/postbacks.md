@@ -1,7 +1,7 @@
 # Postbacks
 
 With postbacks, BallotData POSTs each batch of endorsement changes to your HTTPS endpoint as JSON.
-Set the endpoint at checkout or in your [ballotdata.net account](https://ballotdata.net/account),
+Set the endpoint at checkout or in your [ballotdata.ai account](https://ballotdata.ai/account),
 where the signing secret is shown.
 
 ## The request

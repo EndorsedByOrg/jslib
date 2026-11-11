@@ -1,6 +1,6 @@
 # ballotdata
 
-The official JavaScript and TypeScript client for the [BallotData API](https://api.ballotdata.net/docs):
+The official JavaScript and TypeScript client for the [BallotData API](https://api.ballotdata.ai/docs):
 U.S. ballots (elections, contests and their choices), endorsers and endorsements, officeholders,
 and the live **Endorsement Stream** of changes.
 
@@ -46,9 +46,9 @@ for (const { endorser, picks } of contest.endorsements) {
 
 ## Getting an API key
 
-API accounts come with a purchase at [ballotdata.net/pricing](https://ballotdata.net/pricing). Once
-it goes through, sign in at [api.ballotdata.net](https://api.ballotdata.net/login) and create a key
-in the [console](https://api.ballotdata.net/console/keys).
+API accounts come with a purchase at [ballotdata.ai/pricing](https://ballotdata.ai/pricing). Once
+it goes through, sign in at [api.ballotdata.ai](https://api.ballotdata.ai/login) and create a key
+in the [console](https://api.ballotdata.ai/console/keys).
 
 A key covers what your account bought. Asking about another state answers `403 outside_purchase`.
 Keys have scopes: `data:read` for the data endpoints, `stream:read` for the stream, polling and
@@ -74,7 +74,7 @@ const client = new BallotData({
 | Option | Default | What it does |
 | --- | --- | --- |
 | `apiKey` | `BALLOTDATA_API_KEY` | Your key, `ebk_…`. |
-| `baseUrl` | `BALLOTDATA_API_URL`, then `https://api.ballotdata.net` | Where requests go. |
+| `baseUrl` | `BALLOTDATA_API_URL`, then `https://api.ballotdata.ai` | Where requests go. |
 | `timeout` | `30000` | Milliseconds to wait for each response. |
 | `maxRetries` | `2` | Retries after 429, 503, network errors and timeouts, and 500/502/504 on GET, PUT and DELETE. `0` turns retries off. |
 | `fetch` | global `fetch` | A `fetch` to use instead (a proxy agent, tests). |
@@ -372,7 +372,7 @@ try {
 }
 ```
 
-Quote the `requestId` when you write to [sales@ballotdata.net](mailto:sales@ballotdata.net). Every
+Quote the `requestId` when you write to [sales@ballotdata.ai](mailto:sales@ballotdata.ai). Every
 code is listed in [docs/errors.md](docs/errors.md).
 
 ## Retries, timeouts and cancelling
@@ -433,7 +433,7 @@ Cloudflare Workers and Vercel Edge. It is published as both ES modules and Commo
 - [Stream guide](docs/stream.md): syncing, cursors, reconnecting, serverless.
 - [Postbacks guide](docs/postbacks.md): receiving signed changes.
 - [Errors](docs/errors.md): every error class and code.
-- [API docs](https://api.ballotdata.net/docs) and the [API reference](https://api.ballotdata.net/docs/reference).
+- [API docs](https://api.ballotdata.ai/docs) and the [API reference](https://api.ballotdata.ai/docs/reference).
 - `npm run docs` builds HTML docs of the whole package from its doc comments, into `docs/api`.
 
 ## License

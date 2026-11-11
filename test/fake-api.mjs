@@ -1,4 +1,4 @@
-// A stand-in for api.ballotdata.net, so the tests run without a key or a
+// A stand-in for api.ballotdata.ai, so the tests run without a key or a
 // network. Responses have the shapes in the API reference; the people and
 // endorsers are made up (the same ones the reference uses).
 

@@ -13,12 +13,12 @@ import { VERSION } from './version.js';
 export interface ClientOptions {
   /**
    * Your API key (`ebk_…`). Defaults to the `BALLOTDATA_API_KEY` environment
-   * variable. Keys come with a purchase at https://ballotdata.net/pricing and
-   * are created in the console at https://api.ballotdata.net/console/keys.
+   * variable. Keys come with a purchase at https://ballotdata.ai/pricing and
+   * are created in the console at https://api.ballotdata.ai/console/keys.
    * Keep keys on servers, never in a browser or mobile app.
    */
   apiKey?: string;
-  /** API origin. Defaults to `BALLOTDATA_API_URL`, then `https://api.ballotdata.net`. */
+  /** API origin. Defaults to `BALLOTDATA_API_URL`, then `https://api.ballotdata.ai`. */
   baseUrl?: string;
   /**
    * How many times to retry a request that failed in a way worth retrying:
@@ -56,7 +56,7 @@ export interface Page<T> {
   next_cursor: string | null;
 }
 
-export const DEFAULT_BASE_URL = 'https://api.ballotdata.net';
+export const DEFAULT_BASE_URL = 'https://api.ballotdata.ai';
 const DEFAULT_TIMEOUT = 30_000;
 const DEFAULT_MAX_RETRIES = 2;
 /** Don't sleep longer than this on a Retry-After; a daily limit can ask for hours. */
@@ -167,7 +167,7 @@ export class Transport {
     if (!apiKey) {
       throw new Error(
         'No BallotData API key. Pass { apiKey } or set BALLOTDATA_API_KEY. ' +
-          'Keys come with a purchase at https://ballotdata.net/pricing.',
+          'Keys come with a purchase at https://ballotdata.ai/pricing.',
       );
     }
     const f = options.fetch ?? (globalThis.fetch as typeof fetch | undefined);
