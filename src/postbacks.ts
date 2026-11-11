@@ -4,7 +4,7 @@
  *
  * The header holds a timestamp `t` and `v1`, the hex HMAC-SHA256 of `t`, a
  * dot, and the raw body, keyed with the signing secret shown in your
- * ballotdata.net account. These helpers check it with the Web Crypto API, so
+ * ballotdata.ai account. These helpers check it with the Web Crypto API, so
  * they work in Node, Deno, Bun, Cloudflare Workers and other edge runtimes.
  *
  * Always check the **raw** body, exactly as received. Parsing and
@@ -94,7 +94,7 @@ function parseHeader(header: string): { t: number; v1: string[] } {
  *
  * @param rawBody The request body exactly as received.
  * @param header The `BallotData-Signature` header, e.g. `"t=1760620800,v1=5f2b…"`.
- * @param secret Your signing secret, from your ballotdata.net account.
+ * @param secret Your signing secret, from your ballotdata.ai account.
  * @example
  * if (!(await verifyPostbackSignature(rawBody, req.headers['ballotdata-signature'], secret))) {
  *   return res.writeHead(401).end();

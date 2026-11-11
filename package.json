@@ -13,16 +13,16 @@
     "sdk",
     "server-sent-events"
   ],
-  "homepage": "https://api.ballotdata.net/docs",
+  "homepage": "https://api.ballotdata.ai/docs",
   "bugs": {
-    "email": "sales@ballotdata.net"
+    "email": "sales@ballotdata.ai"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/EndorsedByOrg/jslib.git"
   },
   "license": "MIT",
-  "author": "BallotData LLC <sales@ballotdata.net> (https://ballotdata.net)",
+  "author": "BallotData LLC <sales@ballotdata.ai> (https://ballotdata.ai)",
   "type": "module",
   "sideEffects": false,
   "engines": {

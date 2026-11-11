@@ -26,7 +26,7 @@ An `ApiError` has:
 | `status` | The HTTP status. |
 | `code` | The API's machine-readable code (below). |
 | `message` | The API's message, in plain English. |
-| `requestId` | Quote this when you write to sales@ballotdata.net. |
+| `requestId` | Quote this when you write to sales@ballotdata.ai. |
 | `headers` | The response headers. |
 
 A cancelled request rejects with the `AbortSignal`'s reason, not a `BallotDataError`.
@@ -41,10 +41,10 @@ A cancelled request rejects with the `AbortSignal`'s reason, not a `BallotDataEr
 | `expired_api_key` | 401 | The key expired. | Create a new key. |
 | `ip_not_allowed` | 403 | The key is limited to other IP addresses. | Add this server's address to the key. |
 | `account_pending` | 403 | The account isn't active yet. | |
-| `account_suspended` | 403 | The account is suspended. | Write to sales@ballotdata.net. |
+| `account_suspended` | 403 | The account is suspended. | Write to sales@ballotdata.ai. |
 | `account_closed` | 403 | The account is closed. | |
 | `insufficient_scope` | 403 | The key lacks a scope (`data:read`, `stream:read`, `subscriptions:write`). | Add the scope to the key. |
-| `no_access` | 403 | The account has no API data, or its purchase ended. | Buy at ballotdata.net/pricing with your account's email. |
+| `no_access` | 403 | The account has no API data, or its purchase ended. | Buy at ballotdata.ai/pricing with your account's email. |
 | `outside_purchase` | 403 | You asked about data the account didn't buy (another state, say). | Narrow the request, or buy more. |
 | `invalid_parameter` | 400 | A parameter isn't valid. | The message names it. |
 | `invalid_cursor` | 400 | The cursor isn't one the API made. | |

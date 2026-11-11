@@ -4,6 +4,9 @@
 
 For BallotData API 1.3.0.
 
+- BallotData moved to ballotdata.ai: the default API address is now `https://api.ballotdata.ai`.
+  The old `https://api.ballotdata.net` keeps answering, so earlier versions keep working.
+
 - New `client.candidates.list()` and `client.candidates.get(id)`: candidates, and every endorsement
   each one received.
 - New `client.changes.list({ since })`: every endorsement added, changed or deleted since a time,

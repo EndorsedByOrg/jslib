@@ -1,7 +1,7 @@
 /**
  * Types for everything the BallotData API sends and accepts.
  *
- * They follow the OpenAPI description at https://api.ballotdata.net/openapi.json.
+ * They follow the OpenAPI description at https://api.ballotdata.ai/openapi.json.
  * Field names are kept exactly as the API sends them (snake_case), so what you
  * see in the API reference is what you get here.
  *

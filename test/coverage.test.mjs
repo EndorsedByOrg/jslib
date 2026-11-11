@@ -1,5 +1,5 @@
 // Every operation in the API's OpenAPI description (a copy in test/openapi.json,
-// from https://api.ballotdata.net/openapi.json) has a client method, and that
+// from https://api.ballotdata.ai/openapi.json) has a client method, and that
 // method passes every documented query parameter through.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

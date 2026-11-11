@@ -36,7 +36,7 @@ const client = new BallotData({ apiKey, baseUrl, timeout, maxRetries, fetch, hea
 | Option | Type | Default | |
 | --- | --- | --- | --- |
 | `apiKey` | `string` | `process.env.BALLOTDATA_API_KEY` | Your key, `ebk_…`. The constructor throws without one. |
-| `baseUrl` | `string` | `process.env.BALLOTDATA_API_URL`, then `https://api.ballotdata.net` | |
+| `baseUrl` | `string` | `process.env.BALLOTDATA_API_URL`, then `https://api.ballotdata.ai` | |
 | `timeout` | `number` | `30000` | Milliseconds to wait for each response, body included. |
 | `maxRetries` | `number` | `2` | See [retries](../README.md#retries-timeouts-and-cancelling). |
 | `fetch` | `typeof fetch` | `globalThis.fetch` | |
@@ -423,7 +423,7 @@ received. `SIGNATURE_HEADER` is `'BallotData-Signature'`. A `Postback` is
 | `parseSse(body)` | The SSE parser the stream uses: an async iterator of `{ event, data, id?, retry? }` from a byte stream. |
 | `encodeQuery(query)` | `URLSearchParams` the way the API wants them: lists joined with commas, booleans as `true`/`false`, dates as ISO. |
 | `VERSION` | This library's version. |
-| `DEFAULT_BASE_URL` | `'https://api.ballotdata.net'`. |
+| `DEFAULT_BASE_URL` | `'https://api.ballotdata.ai'`. |
 
 ## Errors
 
