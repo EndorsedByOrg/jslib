@@ -63,6 +63,21 @@ async function usage(): Promise<void> {
     if (err instanceof ApiError && err.code === 'outside_purchase') err.status.toFixed();
   }
 
+  // Candidates, changes, history and exports.
+  const candidate = await client.candidates.get(8811);
+  const received: number = candidate.contests[0]!.endorsements.length;
+  const incumbent: boolean | null = candidate.incumbent;
+  for await (const change of client.changes.list({ since: new Date(), states: 'CA' })) {
+    const before: string | null | undefined = change.before?.statement;
+    void before;
+  }
+  const history = await client.endorsements.history(90211);
+  const kind: 'created' | 'updated' | 'deleted' = history[0]!.change;
+  const csv: string = await client.elections.export('ca-2026-11-03-general', { format: 'csv' });
+  const json = await client.elections.export('ca-2026-11-03-general');
+  const text: string | null = json.contests[0]!.ballot_text;
+  void [received, incumbent, kind, csv, text];
+
   const postback = await constructPostback('{}', 't=1,v1=00', 'secret');
   postback.changes.map((c) => c.type);
 

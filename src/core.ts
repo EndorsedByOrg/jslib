@@ -145,6 +145,8 @@ export interface TransportRequest {
   body?: unknown;
   /** Extra headers. */
   headers?: Record<string, string>;
+  /** `text` returns the body as a string (CSV) instead of parsing JSON. */
+  responseType?: 'json' | 'text';
   options?: RequestOptions;
 }
 
@@ -251,7 +253,7 @@ export class Transport {
   }
 
   /** Make a request, retrying where it's safe, and return the parsed JSON (undefined for 204). */
-  async request<T>({ method, path, query, body, headers, options = {} }: TransportRequest): Promise<T> {
+  async request<T>({ method, path, query, body, headers, responseType = 'json', options = {} }: TransportRequest): Promise<T> {
     const url = this.url(path, query);
     const maxRetries = options.maxRetries ?? this.maxRetries;
     const timeout = options.timeout ?? this.timeout;
@@ -277,7 +279,13 @@ export class Transport {
         this.observe(method, url, res);
         try {
           result = res.ok
-            ? { ok: true, value: res.status === 204 ? (undefined as T) : await this.#read(() => res.json() as Promise<T>, options.signal) }
+            ? {
+                ok: true,
+                value:
+                  res.status === 204
+                    ? (undefined as T)
+                    : await this.#read(() => (responseType === 'text' ? res.text() : res.json()) as Promise<T>, options.signal),
+              }
             : { ok: false, error: await errorFromResponse(res) };
         } finally {
           sent.release();

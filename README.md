@@ -90,6 +90,7 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.states.list()` | `GET /v1/states` | `State[]` |
 | `client.coverage.list({ upcoming })` | `GET /v1/coverage` | `Coverage[]` |
 | `client.elections.list(params)` | `GET /v1/elections` | pages of `ElectionSummary` |
+| `client.elections.export(slug, { format, lang })` | `GET /v1/elections/{slug}/export` | `ElectionExport`, or CSV text with `format: 'csv'` |
 | `client.contests.list(params)` | `GET /v1/contests` | pages of `Contest` |
 | `client.contests.get(id, params)` | `GET /v1/contests/{id}` | `ContestDetail` (with every endorser's position) |
 | `client.endorserCategories.list({ lang })` | `GET /v1/endorser-categories` | `EndorserCategory[]` |
@@ -97,6 +98,10 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.endorsers.get(slug, { lang })` | `GET /v1/endorsers/{slug}` | `EndorserDetail` |
 | `client.endorsements.list(params)` | `GET /v1/endorsements` | pages of `Endorsement` (the basics) |
 | `client.endorsements.get(id, { lang })` | `GET /v1/endorsements/{id}` | `EndorsementDetail` (the full record) |
+| `client.endorsements.history(id)` | `GET /v1/endorsements/{id}/history` | `HistoryEntry[]` (every change) |
+| `client.changes.list(params)` | `GET /v1/changes` | pages of `Change` (added, changed, deleted since a time) |
+| `client.candidates.list(params)` | `GET /v1/candidates` | pages of `CandidateSummary` |
+| `client.candidates.get(id, { lang })` | `GET /v1/candidates/{id}` | `CandidateDetail` (every endorsement received) |
 | `client.officeholders.list(params)` | `GET /v1/officeholders` | pages of `Officeholder` |
 | `client.officeholders.get(personId, { lang })` | `GET /v1/officeholders/{id}` | `OfficeholderDetail` |
 | `client.stream.connect(params, options)` | `GET /v1/stream` | a live `EndorsementStream` |
@@ -193,6 +198,36 @@ the contest with its district, election and voting rules, and the choice with it
 const e = await client.endorsements.get(90211);
 console.log(e.endorser.category.name, e.contest.vote_method, e.choice.candidate?.full_name, e.statement, e.source_url);
 ```
+
+### Candidates
+
+```js
+// Who's running, and how many endorsers backed each one in each contest
+const { data } = await client.candidates.list({ q: 'doe', states: 'CA', incumbent: true });
+
+// Every endorsement one candidate received
+const candidate = await client.candidates.get(8811);
+for (const { contest, endorsements } of candidate.contests) {
+  console.log(contest.title, endorsements.map((e) => e.endorser.name));
+}
+```
+
+### Keeping a copy up to date
+
+Load an election once with `client.elections.export(slug)` (or `{ format: 'csv' }` for a CSV), then
+ask `client.changes.list({ since })` for everything added, changed or deleted since your last sync,
+with the values before and after:
+
+```js
+for await (const change of client.changes.list({ since: lastSync, states: 'CA' })) {
+  if (change.change === 'deleted') await db.remove(change.endorsement_id);
+  else await db.upsert(change.endorsement_id, change.after);
+}
+```
+
+`client.endorsements.history(id)` has every change to one endorsement. Every endorsement says how
+it got here in `added_by`: `data_load`, `staff` or `automatic` (BallotData's watch of the
+endorser's own page).
 
 `groupByContest()` turns rows back into positions:
 

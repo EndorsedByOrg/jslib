@@ -1,4 +1,6 @@
 import { Transport, type ClientOptions, type PagePromise, type RequestOptions } from './core.js';
+import { CandidatesResource } from './resources/candidates.js';
+import { ChangesResource } from './resources/changes.js';
 import { ContestsResource } from './resources/contests.js';
 import { ElectionsResource } from './resources/elections.js';
 import { EndorsementsResource } from './resources/endorsements.js';
@@ -27,7 +29,7 @@ export class BallotData {
   readonly states: StatesResource;
   /** `GET /v1/coverage`. */
   readonly coverage: CoverageResource;
-  /** `GET /v1/elections`. */
+  /** `GET /v1/elections`, `GET /v1/elections/{slug}/export`. */
   readonly elections: ElectionsResource;
   /** `GET /v1/contests`, `GET /v1/contests/{id}`. */
   readonly contests: ContestsResource;
@@ -35,8 +37,12 @@ export class BallotData {
   readonly endorserCategories: EndorserCategoriesResource;
   /** `GET /v1/endorsers`, `GET /v1/endorsers/{slug}`. */
   readonly endorsers: EndorsersResource;
-  /** `GET /v1/endorsements`. */
+  /** `GET /v1/endorsements`, `GET /v1/endorsements/{id}`, `GET /v1/endorsements/{id}/history`. */
   readonly endorsements: EndorsementsResource;
+  /** `GET /v1/changes`. */
+  readonly changes: ChangesResource;
+  /** `GET /v1/candidates`, `GET /v1/candidates/{id}`. */
+  readonly candidates: CandidatesResource;
   /** `GET /v1/officeholders`, `GET /v1/officeholders/{id}`. */
   readonly officeholders: OfficeholdersResource;
   /** `GET /v1/stream` (Server-Sent Events). */
@@ -62,6 +68,8 @@ export class BallotData {
     this.endorserCategories = new EndorserCategoriesResource(transport);
     this.endorsers = new EndorsersResource(transport);
     this.endorsements = new EndorsementsResource(transport);
+    this.changes = new ChangesResource(transport);
+    this.candidates = new CandidatesResource(transport);
     this.officeholders = new OfficeholdersResource(transport);
     this.stream = new StreamResource(transport);
     this.events = new EventsResource(transport);
