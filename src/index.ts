@@ -40,6 +40,7 @@ export {
 } from './postbacks.js';
 export type { RawBody, VerifyOptions } from './postbacks.js';
 export { CandidatesResource } from './resources/candidates.js';
+export { IssuePositionsResource, IssuesResource } from './resources/issues.js';
 export { ChangesResource } from './resources/changes.js';
 export { ContestsResource } from './resources/contests.js';
 export { ElectionsResource } from './resources/elections.js';

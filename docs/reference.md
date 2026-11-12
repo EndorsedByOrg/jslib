@@ -269,7 +269,36 @@ them in each.
 ### `candidates.get(id, { lang }?, options?)` → `Promise<CandidateDetail>`
 
 `GET /v1/candidates/{id}`. One candidate with every contest they're on and every endorsement they
-received in each. Throws `NotFoundError`, or `PermissionDeniedError` (`outside_purchase`).
+received in each, and `issue_positions`: where they stand on common issues, each with its sources.
+Throws `NotFoundError`, or `PermissionDeniedError` (`outside_purchase`).
+
+## `client.issues`
+
+### `issues.list(options?)` → `Promise<Issue[]>`
+
+`GET /v1/issues`. The policy issues candidates' positions are recorded on, in display order. Each
+has a yes/no `question`; a position's `stance` answers it (`supports`, `opposes`, `mixed`, or null
+for a stated position that doesn't answer it either way).
+
+## `client.issuePositions`
+
+### `issuePositions.list(params?, options?)` → `PagePromise<IssuePositionItem>`
+
+`GET /v1/issue-positions`. Where candidates stand, one row per candidate and issue: a neutral
+`summary`, the candidate's own words (`quote`) where there are any, and `sources` (their site,
+debates, questionnaires, news, or official roll-call votes for members of Congress). Each row names
+its `candidate` and the `contests` they're on that you can read.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `issues` | `ListParam` | Issue slugs. |
+| `stances` | `ListParam<IssueStance>` | `supports`, `opposes`, `mixed`. |
+| `candidates` | `number \| number[]` | Candidate ids. |
+| `contests` | `number \| number[]` | Contest ids: positions of the candidates on these contests. |
+| `elections` | `ListParam` | Election slugs. |
+| `states` | `ListParam<StateCode>` | States the contests are voted in. |
+| `limit` | `number` | 1–1000, default 100. |
+| `cursor` | `string` | |
 
 ## `client.officeholders`
 

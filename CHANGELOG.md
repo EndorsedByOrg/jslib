@@ -2,13 +2,15 @@
 
 ## 2.1.0 (unreleased)
 
-For BallotData API 1.3.0.
+For BallotData API 1.4.0.
 
 - BallotData moved to ballotdata.ai: the default API address is now `https://api.ballotdata.ai`.
   The old `https://api.ballotdata.net` keeps answering, so earlier versions keep working.
 
 - New `client.candidates.list()` and `client.candidates.get(id)`: candidates, and every endorsement
   each one received.
+- New `client.issues.list()` and `client.issuePositions.list()`: where candidates stand on common
+  issues, each position with its sources. `CandidateDetail` has `issue_positions`.
 - New `client.changes.list({ since })`: every endorsement added, changed or deleted since a time,
   with the values before and after.
 - New `client.endorsements.history(id)`: every change to one endorsement.
