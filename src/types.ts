@@ -803,6 +803,20 @@ export interface ListCandidatesParams extends LangParams, PageParams {
   upcoming?: boolean;
 }
 
+/** Parameters for {@link IssuePositionsResource.list}. */
+export interface ListIssuePositionsParams extends PageParams {
+  /** Issue slugs (from {@link IssuesResource.list}). */
+  issues?: ListParam;
+  stances?: ListParam<IssueStance>;
+  /** Candidate ids. */
+  candidates?: number | readonly number[];
+  /** Contest ids: positions of the candidates on these contests. */
+  contests?: number | readonly number[];
+  elections?: ListParam;
+  /** States the contests are voted in. */
+  states?: ListParam<StateCode>;
+}
+
 /** Parameters for {@link ElectionsResource.export}. */
 export interface ExportElectionParams extends LangParams {
   /** `json` (the default) or `csv`. */
@@ -939,6 +953,71 @@ export interface CandidateEndorsement {
 /** A candidate with every endorsement they received, from {@link CandidatesResource.get}. */
 export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   contests: (CandidateContest & { endorsements: CandidateEndorsement[] })[];
+  /** Where they stand on common issues, in issue order. Empty where there are none yet. */
+  issue_positions: IssuePosition[];
+}
+
+// ----------------------------------------------------------- issue positions
+
+/** A policy issue, from {@link IssuesResource.list}. */
+export interface Issue {
+  slug: string;
+  /** Short name: "Abortion". */
+  name: string;
+  /** The yes/no question a position's `stance` answers. */
+  question: string;
+  description: string;
+}
+
+/**
+ * The answer to an issue's question: `supports` (yes), `opposes` (no),
+ * `mixed` (yes to part, or yes with limits the summary spells out), or null
+ * for a stated position that doesn't answer it either way.
+ */
+export type IssueStance = 'supports' | 'opposes' | 'mixed';
+
+/** What kind of source a position was taken from. */
+export type IssuePositionSourceKind =
+  | 'candidate_website'
+  | 'voting_record'
+  | 'official_statement'
+  | 'questionnaire'
+  | 'debate'
+  | 'news';
+
+/** A link a position was taken from. */
+export interface IssuePositionSource {
+  url: string;
+  kind: IssuePositionSourceKind;
+  /** "U.S. Senate", "The Atlanta Journal-Constitution". */
+  publisher: string;
+  title: string | null;
+  published_on: DateString | null;
+}
+
+/**
+ * Where a candidate stands on one issue, as they stated it or as their votes
+ * in Congress show it. Never inferred from party or endorsements.
+ */
+export interface IssuePosition {
+  id: number;
+  issue: { slug: string; name: string };
+  stance: IssueStance | null;
+  /** Where they stand, in neutral words. */
+  summary: string;
+  /** Their own words, verbatim, where a source has them. */
+  quote: string | null;
+  /** When the sources were last read. */
+  checked_on: DateString;
+  /** At least one. */
+  sources: IssuePositionSource[];
+}
+
+/** A position from {@link IssuePositionsResource.list}, with its candidate and their contests. */
+export interface IssuePositionItem extends IssuePosition {
+  candidate: { id: number; full_name: string };
+  /** The candidate's contests you can read (and that match the filters), newest election first. */
+  contests: { id: number; title: string; election: { slug: string; date: DateString }; state: StateCode | null }[];
 }
 
 // ------------------------------------------------------------------ exports

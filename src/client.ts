@@ -5,6 +5,7 @@ import { ContestsResource } from './resources/contests.js';
 import { ElectionsResource } from './resources/elections.js';
 import { EndorsementsResource } from './resources/endorsements.js';
 import { EndorsersResource } from './resources/endorsers.js';
+import { IssuePositionsResource, IssuesResource } from './resources/issues.js';
 import { OfficeholdersResource } from './resources/officeholders.js';
 import { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 import { EventsResource, StreamResource } from './resources/stream.js';
@@ -43,6 +44,10 @@ export class BallotData {
   readonly changes: ChangesResource;
   /** `GET /v1/candidates`, `GET /v1/candidates/{id}`. */
   readonly candidates: CandidatesResource;
+  /** `GET /v1/issues`. */
+  readonly issues: IssuesResource;
+  /** `GET /v1/issue-positions`. */
+  readonly issuePositions: IssuePositionsResource;
   /** `GET /v1/officeholders`, `GET /v1/officeholders/{id}`. */
   readonly officeholders: OfficeholdersResource;
   /** `GET /v1/stream` (Server-Sent Events). */
@@ -70,6 +75,8 @@ export class BallotData {
     this.endorsements = new EndorsementsResource(transport);
     this.changes = new ChangesResource(transport);
     this.candidates = new CandidatesResource(transport);
+    this.issues = new IssuesResource(transport);
+    this.issuePositions = new IssuePositionsResource(transport);
     this.officeholders = new OfficeholdersResource(transport);
     this.stream = new StreamResource(transport);
     this.events = new EventsResource(transport);

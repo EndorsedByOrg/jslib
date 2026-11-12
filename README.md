@@ -101,7 +101,9 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.endorsements.history(id)` | `GET /v1/endorsements/{id}/history` | `HistoryEntry[]` (every change) |
 | `client.changes.list(params)` | `GET /v1/changes` | pages of `Change` (added, changed, deleted since a time) |
 | `client.candidates.list(params)` | `GET /v1/candidates` | pages of `CandidateSummary` |
-| `client.candidates.get(id, { lang })` | `GET /v1/candidates/{id}` | `CandidateDetail` (every endorsement received) |
+| `client.candidates.get(id, { lang })` | `GET /v1/candidates/{id}` | `CandidateDetail` (every endorsement received, and `issue_positions`) |
+| `client.issues.list()` | `GET /v1/issues` | `Issue[]` |
+| `client.issuePositions.list(params)` | `GET /v1/issue-positions` | pages of `IssuePositionItem` |
 | `client.officeholders.list(params)` | `GET /v1/officeholders` | pages of `Officeholder` |
 | `client.officeholders.get(personId, { lang })` | `GET /v1/officeholders/{id}` | `OfficeholderDetail` |
 | `client.stream.connect(params, options)` | `GET /v1/stream` | a live `EndorsementStream` |
@@ -209,6 +211,14 @@ const { data } = await client.candidates.list({ q: 'doe', states: 'CA', incumben
 const candidate = await client.candidates.get(8811);
 for (const { contest, endorsements } of candidate.contests) {
   console.log(contest.title, endorsements.map((e) => e.endorser.name));
+}
+
+// Where they stand on common issues, with a link for every position
+for (const p of candidate.issue_positions) console.log(p.issue.name, p.stance, p.sources[0].url);
+
+// Everyone in Georgia who has a stated or recorded position on abortion
+for await (const p of client.issuePositions.list({ issues: 'abortion', states: 'GA' })) {
+  console.log(p.candidate.full_name, p.stance, p.summary);
 }
 ```
 
