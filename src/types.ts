@@ -48,6 +48,45 @@ export type PrimarySystem = 'none' | 'closed' | 'semi_closed' | 'open' | 'top_tw
 /** An answer on a measure or retention question. */
 export type MeasureAnswer = 'yes' | 'no';
 
+/** The election stage an endorsement is for. */
+export type EndorsementStage = 'general' | 'primary' | 'runoff';
+
+/** regular, special (rest of an unexpired term, or a special election), recall or retention. */
+export type RaceType = 'regular' | 'special' | 'recall' | 'retention';
+
+/** The office a contest fills, normalized across states. */
+export type ContestOfficeType =
+  | 'president' | 'us_senator' | 'us_representative'
+  | 'governor' | 'lieutenant_governor' | 'attorney_general' | 'secretary_of_state' | 'state_treasurer' | 'state_auditor'
+  | 'state_superintendent' | 'insurance_commissioner' | 'agriculture_commissioner' | 'land_commissioner' | 'labor_commissioner'
+  | 'utility_commission' | 'university_board' | 'state_board_of_education' | 'state_senator' | 'state_representative'
+  | 'state_supreme_court' | 'state_appellate_court' | 'trial_court' | 'municipal_court' | 'magistrate' | 'justice_of_the_peace' | 'court_clerk'
+  | 'mayor' | 'local_executive' | 'city_council' | 'county_legislature' | 'neighborhood_council' | 'school_board' | 'school_superintendent'
+  | 'college_board' | 'special_district_board' | 'water_conservation_board' | 'sheriff' | 'prosecutor' | 'coroner' | 'constable'
+  | 'assessor' | 'tax_collector' | 'treasurer' | 'auditor' | 'recorder' | 'clerk' | 'surveyor' | 'public_works' | 'police_fire'
+  | 'other_county_office' | 'other';
+
+/** What office a contest fills, worked out from its title and district. */
+export interface ContestOffice {
+  type: ContestOfficeType;
+  /** State courts are state, whatever district they sit in. */
+  level: 'federal' | 'state' | 'local';
+  branch: 'executive' | 'legislative' | 'judicial';
+}
+
+/** A topic ballot measures are tagged with. */
+export type MeasureTopicSlug =
+  | 'taxes' | 'bonds' | 'budgets' | 'education' | 'housing' | 'elections' | 'government' | 'term_limits' | 'ethics'
+  | 'local_boundaries' | 'public_safety' | 'criminal_justice' | 'health' | 'mental_health' | 'environment' | 'energy'
+  | 'water' | 'transportation' | 'parks_recreation' | 'libraries' | 'land_use' | 'economic_development' | 'cannabis'
+  | 'alcohol' | 'gambling' | 'abortion' | 'civil_rights' | 'labor' | 'pensions' | 'firearms' | 'utilities' | 'immigration'
+  | 'veterans' | 'animals' | 'seniors' | 'children';
+
+export interface MeasureTopic {
+  slug: MeasureTopicSlug;
+  name: string;
+}
+
 /** Offices covered by {@link Officeholder}. */
 export type Office =
   | 'us_senator'
@@ -359,13 +398,67 @@ export interface ContestDetails {
   [key: string]: unknown;
 }
 
+/** A candidate's name in parts, split from the full name. */
+export interface NameParts {
+  given: string | null;
+  middle: string | null;
+  /** Family (last) name, with particles such as "de la" or "Van". */
+  family: string | null;
+  /** Jr., Sr., II, III, … */
+  suffix: string | null;
+  /** The name in quotes or parentheses on the ballot. */
+  nickname: string | null;
+}
+
+/** A candidate's ids in other public systems. */
+export interface CandidateIds {
+  /** Federal Election Commission candidate id (U.S. House and Senate candidates). */
+  fec: string | null;
+  /** Congressional Biographical Directory id (sitting members of Congress). */
+  bioguide: string | null;
+}
+
+export type SocialNetwork = 'facebook' | 'x' | 'instagram' | 'youtube' | 'linkedin' | 'tiktok' | 'threads' | 'bluesky';
+
+/** How to reach a candidate: website and social accounts from Wikidata, the FEC filing address, and the campaign's own site. */
+export interface Contact {
+  /** Website, from Wikidata or (for an incumbent) the official site. */
+  website: string | null;
+  email: string | null;
+  phone: string | null;
+  /** Campaign committee mailing address, from its FEC filing. */
+  mailing_address: string | null;
+  /** Social accounts (full URLs), from Wikidata or the campaign's own site. Only networks found are present. */
+  social: Partial<Record<SocialNetwork, string>>;
+  /** Where each detail came from. */
+  sources: { url: string; kind: 'wikidata' | 'open_states' | 'fec_filing' | 'campaign_website'; read_on: DateString }[];
+}
+
+/** FEC campaign finance totals for one two-year cycle. */
+export interface Finance {
+  /** The cycle by its last year: 2026 = 2025-2026. */
+  cycle: number;
+  committee_id: string | null;
+  receipts: number;
+  disbursements: number;
+  cash_on_hand: number;
+  debts: number;
+  individual_contributions: number | null;
+  /** The date the totals run through. */
+  coverage_end: DateString | null;
+  source_url: string;
+}
+
 /** A candidate. */
 export interface Candidate {
   id: number;
   full_name: string;
+  name: NameParts;
   /** Campaign website. */
   website_url: string | null;
   photo_url: string | null;
+  ids: CandidateIds;
+  contact: Contact;
 }
 
 /** A line a voter can mark: a candidate, or a Yes/No answer. */
@@ -386,6 +479,8 @@ export interface Choice {
   incumbent: boolean | null;
   /** For a measure answer: what a Yes (or No) vote means, as the election office words it. */
   vote_meaning: string | null;
+  /** Endorsers who endorsed this choice (for a measure: who back this answer). */
+  endorsement_count: number;
   /** The candidate; null for a measure answer. */
   candidate: Candidate | null;
   /** The party (or party preference) printed beside the name. */
@@ -425,6 +520,14 @@ export interface ContestBase {
   details: ContestDetails;
   /** The official source the contest was loaded from. */
   source_url: string | null;
+  /** The office a candidate or retention contest fills; null for a measure. */
+  office: ContestOffice | null;
+  /** regular, special (rest of an unexpired term), recall or retention; null for a measure. */
+  race_type: RaceType | null;
+  /** Candidates run with a party label; null for a measure or retention question. */
+  partisan: boolean | null;
+  /** A measure's topics (`client.measureTopics.list()`); empty for candidate contests. */
+  topics: MeasureTopicSlug[];
   district: District;
   election: Election;
   /** The election result, once a source has one; null before then. */
@@ -454,6 +557,7 @@ export interface Pick {
   /** When it was published. */
   published_on: DateString | null;
   added_by: AddedBy;
+  stage: EndorsementStage;
 }
 
 /**
@@ -577,6 +681,7 @@ export interface Endorsement {
   /** When it was published. */
   published_on: DateString | null;
   added_by: AddedBy;
+  stage: EndorsementStage;
   /** Who made the endorsement. */
   endorser: { id: number; slug: string; name: string };
   /** The contest: `client.contests.get(id)` has its choices and every position. */
@@ -609,6 +714,7 @@ export interface EndorsementDetail {
   /** When BallotData collected it. */
   retrieved_at: DateTimeString;
   added_by: AddedBy;
+  stage: EndorsementStage;
   endorser: EndorsementEndorser;
   /** The contest with its district, election and voting rules. */
   contest: ContestBase;
@@ -814,6 +920,10 @@ export interface ListContestsParams extends LangParams, PageParams {
   contest_kinds?: ListParam<ContestKind>;
   /** OCD division ids of the districts. */
   districts?: ListParam;
+  /** Only contests for these offices. */
+  offices?: ListParam<ContestOfficeType>;
+  /** Only measures on any of these topics. */
+  topics?: ListParam<MeasureTopicSlug>;
   /** Only elections from yesterday on. */
   upcoming?: boolean;
   /** true: only contests with a result; false: only those without one yet. */
@@ -1000,6 +1110,8 @@ export interface CandidateContest {
     vote_method: VoteMethod;
     votes_allowed: number | null;
     ranks_allowed: number | null;
+    office: ContestOffice | null;
+    race_type: RaceType | null;
   };
   district: { id: number; ocd_id: string | null; name: string; level: Level; state: StateCode | null };
   election: { id: number; slug: string; name: string; date: DateString };
@@ -1023,10 +1135,13 @@ export interface CandidateContest {
 export interface CandidateSummary {
   id: number;
   full_name: string;
+  name: NameParts;
   website_url: string | null;
   photo_url: string | null;
   /** Holds the seat now: true or false where known, null where not yet. */
   incumbent: boolean | null;
+  ids: CandidateIds;
+  contact: Contact;
   /** The contests they're on that you can read, newest election first. */
   contests: CandidateContest[];
 }
@@ -1040,11 +1155,14 @@ export interface CandidateEndorsement {
   source_url: string | null;
   published_on: DateString | null;
   added_by: AddedBy;
+  stage: EndorsementStage;
 }
 
 /** A candidate with every endorsement they received, from {@link CandidatesResource.get}. */
 export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   contests: (CandidateContest & { endorsements: CandidateEndorsement[] })[];
+  /** FEC campaign finance totals, newest cycle first; empty without an FEC id. */
+  finance: Finance[];
   /** Where they stand on common issues, in issue order. Empty where there are none yet. */
   issue_positions: IssuePosition[];
 }

@@ -1,7 +1,7 @@
 import { Transport, type ClientOptions, type PagePromise, type RequestOptions } from './core.js';
 import { CandidatesResource } from './resources/candidates.js';
 import { ChangesResource } from './resources/changes.js';
-import { ContestsResource } from './resources/contests.js';
+import { ContestsResource, MeasureTopicsResource } from './resources/contests.js';
 import { ElectionsResource } from './resources/elections.js';
 import { EndorsementsResource } from './resources/endorsements.js';
 import { EndorsersResource } from './resources/endorsers.js';
@@ -46,6 +46,8 @@ export class BallotData {
   readonly candidates: CandidatesResource;
   /** `GET /v1/issues`. */
   readonly issues: IssuesResource;
+  /** `GET /v1/measure-topics`. */
+  readonly measureTopics: MeasureTopicsResource;
   /** `GET /v1/issue-positions`. */
   readonly issuePositions: IssuePositionsResource;
   /** `GET /v1/officeholders`, `GET /v1/officeholders/{id}`. */
@@ -76,6 +78,7 @@ export class BallotData {
     this.changes = new ChangesResource(transport);
     this.candidates = new CandidatesResource(transport);
     this.issues = new IssuesResource(transport);
+    this.measureTopics = new MeasureTopicsResource(transport);
     this.issuePositions = new IssuePositionsResource(transport);
     this.officeholders = new OfficeholdersResource(transport);
     this.stream = new StreamResource(transport);

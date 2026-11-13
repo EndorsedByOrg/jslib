@@ -2,7 +2,7 @@
 
 ## 2.2.0 (unreleased)
 
-For BallotData API 1.5.0.
+For BallotData API 1.6.0.
 
 - Election results: `Contest.result` (`ContestResult`: status, `source_kind` official / compiled /
   party, `party_reported`, totals, the source and its URL, ranked-choice rounds, write-ins) and
@@ -10,6 +10,15 @@ For BallotData API 1.5.0.
   `CandidateContest` has `result` and `choice.result`; `ElectionSummary` has `result_count`;
   `ElectionDetails` has `historical` for past elections such as November 5, 2024.
 - New parameters: `has_result` and `result_statuses` on `client.contests.list()`.
+- What other election-data providers' files carry:
+  - Contests: `office` (`ContestOffice`: a normalized `type` such as `us_representative`, `mayor` or
+    `school_board`, with `level` and `branch`), `race_type` (regular, special, recall, retention),
+    `partisan`, and `topics` on measures. New `offices` and `topics` parameters on
+    `client.contests.list()`, and `client.measureTopics.list()`.
+  - Candidates: `name` (`NameParts`), `ids` (FEC and bioguide), `contact` (website, email, phone,
+    mailing address and social accounts, each with its source), and `finance` (FEC totals) on
+    `client.candidates.get(id)`.
+  - `endorsement_count` on every choice, and `stage` (general, primary, runoff) on endorsements and picks.
 
 ## 2.1.0
 

@@ -1,5 +1,5 @@
 import type { PagePromise, RequestOptions } from '../core.js';
-import type { Contest, ContestDetail, GetContestParams, ListContestsParams } from '../types.js';
+import type { Contest, ContestDetail, GetContestParams, ListContestsParams, MeasureTopic } from '../types.js';
 import { Resource, seg } from './resource.js';
 
 /** `GET /v1/contests` and `GET /v1/contests/{id}`. */
@@ -43,6 +43,21 @@ export class ContestsResource extends Resource {
       query: { ...params },
       options,
     });
+    return res.data;
+  }
+}
+
+/** `GET /v1/measure-topics`: the topics ballot measures are tagged with. */
+export class MeasureTopicsResource extends Resource {
+  /**
+   * Every topic (taxes, bonds, housing, elections, …) in display order. Use
+   * the slugs in `topics` filters on `client.contests.list()`.
+   *
+   * @example
+   * const topics = await client.measureTopics.list();
+   */
+  async list(options?: RequestOptions): Promise<MeasureTopic[]> {
+    const res = await this.transport.request<{ data: MeasureTopic[] }>({ method: 'GET', path: '/v1/measure-topics', options });
     return res.data;
   }
 }
