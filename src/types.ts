@@ -431,7 +431,7 @@ export interface Contact {
   /** Social accounts (full URLs), from Wikidata or the campaign's own site. Only networks found are present. */
   social: Partial<Record<SocialNetwork, string>>;
   /** Where each detail came from. */
-  sources: { url: string; kind: 'wikidata' | 'open_states' | 'fec_filing' | 'campaign_website'; read_on: DateString }[];
+  sources: { url: string; kind: 'wikidata' | 'open_states' | 'fec_filing' | 'official_filing' | 'campaign_website'; read_on: DateString }[];
 }
 
 /** FEC campaign finance totals for one two-year cycle. */
