@@ -2,7 +2,14 @@
 
 ## 2.1.0 (unreleased)
 
-For BallotData API 1.4.0.
+For BallotData API 1.5.0.
+
+- Election results: `Contest.result` (`ContestResult`: status, `source_kind` official / compiled /
+  party, `party_reported`, totals, the source and its URL, ranked-choice rounds, write-ins) and
+  `Choice.result` (`ChoiceResult`: `votes`, `vote_pct`, `winner`), null until a source has a result.
+  `CandidateContest` has `result` and `choice.result`; `ElectionSummary` has `result_count`;
+  `ElectionDetails` has `historical` for past elections such as November 5, 2024.
+- New parameters: `has_result` and `result_statuses` on `client.contests.list()`.
 
 - BallotData moved to ballotdata.ai: the default API address is now `https://api.ballotdata.ai`.
   The old `https://api.ballotdata.net` keeps answering, so earlier versions keep working.

@@ -194,6 +194,8 @@ export interface ElectionDetails {
   louisiana_open_primary?: boolean;
   /** Anything else voters should know. */
   note?: string;
+  /** A past election kept for its results and history (the November 5, 2024 general, for example). */
+  historical?: boolean;
   [key: string]: unknown;
 }
 
@@ -221,6 +223,84 @@ export interface ElectionSummary extends Election {
   contest_count: number;
   /** Endorsements in those contests. */
   endorsement_count: number;
+  /** Contests on the ballot with a result. */
+  result_count: number;
+}
+
+// ---------------------------------------------------------------- results
+
+/** `unofficial` (counts still changing) or `certified` (the canvass is certified). */
+export type ResultStatus = 'unofficial' | 'certified';
+
+/**
+ * Where a result comes from: `official` (a state, county, city or federal election office),
+ * `compiled` (certified official returns compiled by a research group, summed to the contest; used
+ * for past elections) or `party` (a party's announcement of the winner, with no vote counts).
+ */
+export type ResultSourceKind = 'official' | 'compiled' | 'party';
+
+/** One choice's line in a contest's result. */
+export interface ChoiceResult {
+  /** Votes for this choice. null only on a party-reported result, which names a winner without counts. */
+  votes: number | null;
+  /** Share of the contest's votes, 0 to 100, as the source gives it. */
+  vote_pct: number | null;
+  /** true for a winner, false for a choice that lost, null when not decided or not stated (a runoff). */
+  winner: boolean | null;
+}
+
+/** A line the source reports that isn't a choice on the printed ballot, such as a named write-in. */
+export interface OtherResultLine {
+  label: string | null;
+  votes: number | null;
+  /** A write-in candidate. */
+  write_in: boolean;
+}
+
+/** A contest's result. Each choice's votes are on the choice (`choices[].result`). */
+export interface ContestResult {
+  status: ResultStatus;
+  source_kind: ResultSourceKind;
+  /** true when the result is a party's announcement (`source_kind` `party`), not an official count. */
+  party_reported: boolean;
+  /** Votes cast: the printed choices plus write-ins. null on a party-reported result. */
+  total_votes: number | null;
+  precincts_reporting: number | null;
+  precincts_total: number | null;
+  source: {
+    /** Who published the result, e.g. "California Secretary of State". */
+    name: string;
+    /** Where it was published. Every result has one. */
+    url: string;
+    /** The contest's name in the source. */
+    contest_name: string | null;
+    /** When the source last updated it, if it says. */
+    updated_at: string | null;
+  };
+  /** For a compiled result, the state's own certified results, where known. */
+  official_url: string | null;
+  /** Further announcements of the same result. */
+  more_sources: { name: string | null; url: string }[];
+  write_in_votes: number | null;
+  blank_votes: number | null;
+  over_votes: number | null;
+  under_votes: number | null;
+  /** Lines the source reports that aren't on the printed ballot. */
+  other_choices: OtherResultLine[];
+  /** Ranked choice: the official tabulation's rounds, as the source reports them. */
+  rcv_rounds: Record<string, unknown>[] | null;
+  notes: string | null;
+  /** When BallotData last read it from the source. */
+  fetched_at: string;
+}
+
+/** A contest's result in brief, on a {@link CandidateContest}. */
+export interface ContestResultBrief {
+  status: ResultStatus;
+  source_kind: ResultSourceKind;
+  party_reported: boolean;
+  total_votes: number | null;
+  source_url: string;
 }
 
 // ---------------------------------------------------------------- contests
@@ -312,6 +392,8 @@ export interface Choice {
   party: Party | null;
   /** The party text exactly as printed, where it differs (fusion lines, top-two preferences). */
   party_label: string | null;
+  /** This choice's votes, once the contest has a result; null before then. */
+  result: ChoiceResult | null;
 }
 
 /** A contest without its choices, as embedded in an {@link EndorsementDetail}. */
@@ -345,6 +427,8 @@ export interface ContestBase {
   source_url: string | null;
   district: District;
   election: Election;
+  /** The election result, once a source has one; null before then. */
+  result: ContestResult | null;
 }
 
 /** A contest with every choice, in ballot order. */
@@ -732,6 +816,10 @@ export interface ListContestsParams extends LangParams, PageParams {
   districts?: ListParam;
   /** Only elections from yesterday on. */
   upcoming?: boolean;
+  /** true: only contests with a result; false: only those without one yet. */
+  has_result?: boolean;
+  /** Only contests whose result has one of these statuses. */
+  result_statuses?: ListParam<ResultStatus>;
 }
 
 /** Parameters for {@link ContestsResource.get}: which endorsers' positions to include. */
@@ -922,7 +1010,11 @@ export interface CandidateContest {
     withdrawn: boolean;
     party: Party | null;
     party_label: string | null;
+    /** The candidate's votes and whether they won, once the contest has a result. */
+    result: ChoiceResult | null;
   };
+  /** The contest's result, once a source has one. */
+  result: ContestResultBrief | null;
   /** Endorsers who endorsed this candidate in this contest. */
   endorsement_count: number;
 }

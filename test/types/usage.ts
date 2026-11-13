@@ -78,6 +78,14 @@ async function usage(): Promise<void> {
   const text: string | null = json.contests[0]!.ballot_text;
   void [received, incumbent, kind, csv, text];
 
+  const decided = await client.contests.list({ elections: 'ca-2024-11-05-general', has_result: true, result_statuses: ['certified'] });
+  const result = decided.data[0]?.result;
+  const kindOfSource: 'official' | 'compiled' | 'party' | undefined = result?.source_kind;
+  const votes: number | null | undefined = decided.data[0]?.choices[0]?.result?.votes;
+  const won: boolean | null | undefined = (await client.candidates.get(8811)).contests[0]?.choice.result?.winner;
+  const historical: boolean | undefined = (await client.elections.list()).data[0]?.details.historical;
+  void [kindOfSource, votes, won, historical, result?.source.url];
+
   const postback = await constructPostback('{}', 't=1,v1=00', 'secret');
   postback.changes.map((c) => c.type);
 
