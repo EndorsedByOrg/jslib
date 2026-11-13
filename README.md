@@ -422,8 +422,10 @@ const client = new BallotData({
 
 Types ship with the package: every response object (`Contest`, `Endorsement`, `EndorsementEvent`,
 …), every parameter object (`ListEndorsementsParams`, `StreamParams`, …) and every enum
-(`VoteMethod`, `Level`, `ErrorCode`, …). Fields keep the API's snake_case names, so the API
-reference reads the same as your code.
+(`VoteMethod`, `Level`, `ErrorCode`, …). Each enum's doc comment lists every value and what it
+means, the same as the API's [Field values](https://api.ballotdata.ai/docs/values) page, so your
+editor shows the meaning as you type. Fields keep the API's snake_case names, so the API reference
+reads the same as your code.
 
 ```ts
 import { BallotData, type Contest, type EndorsementEvent } from 'ballotdata';

@@ -474,7 +474,7 @@ All exported from the package root. The main ones:
 | `Officeholder`, `OfficeholderDetail` | Officeholders. |
 | `EndorsementEvent`, `EventsPage`, `Filter`, `Subscription`, `SubscriptionInput`, `Postback` | Stream. |
 | `List…Params`, `GetContestParams`, `StreamParams`, `ListEventsParams`, `CoverageParams`, `LangParams`, `PageParams` | Parameters. |
-| `VoteMethod`, `ContestKind`, `Level`, `ElectionType`, `PrimarySystem`, `MeasureAnswer`, `Office`, `EventType`, `ChangeType`, `ErrorCode`, `Lang` | Enums. |
+| `VoteMethod`, `ContestKind`, `Level`, `ElectionType`, `PrimarySystem`, `MeasureAnswer`, `EndorsementStage`, `RaceType`, `ContestOfficeType`, `OfficeLevel`, `OfficeBranch`, `MeasureTopicSlug`, `ResultStatus`, `ResultSourceKind`, `AddedBy`, `HistoryField`, `IssueStance`, `IssuePositionSourceKind`, `ContactSourceKind`, `Office`, `OfficeholderLevel`, `EventType`, `ChangeType`, `ErrorCode`, `Lang` | Enums. Each one's doc comment lists every value and what it means, as on the API's [Field values](https://api.ballotdata.ai/docs/values) page. |
 | `ClientOptions`, `RequestOptions`, `Page`, `ResponseInfo`, `RateLimit`, `StreamOptions`, `StreamMessage`, `FollowOptions` | Client. |
 
 Each field is documented in the type definitions (`dist/*/types.d.ts`), which editors show as you
