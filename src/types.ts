@@ -19,42 +19,195 @@ export type DateString = string;
 /** A time as ISO 8601, e.g. `"2026-10-14T21:07:33.512Z"`. */
 export type DateTimeString = string;
 
-/** Language for ballot text. `es` returns Spanish where the state publishes it, English otherwise. Names are never translated. */
+/**
+ * Language for ballot text.
+ *
+ * - `en`: English (the default).
+ * - `es`: Spanish ballot text (titles, choices, measure text, statements) where the state publishes it;
+ *   English where it doesn’t. Names are never translated.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#lang
+ */
 export type Lang = 'en' | 'es';
 
-/** Level of government a district belongs to. */
+/**
+ * Level of the district a contest is voted in.
+ *
+ * - `federal`: The whole country, or a U.S. House district.
+ * - `state`: A whole state, or a state legislative, judicial or other state district.
+ * - `county`: A county (a parish in Louisiana, a borough in Alaska) or a district within one.
+ * - `city`: A city, town, township, village or borough, or a ward or council district within one.
+ * - `school`: A school district, community college district, or a trustee area within one.
+ * - `special`: A special district: water, fire, hospital, park, transit, port, conservation and the like.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#district-level
+ */
 export type Level = 'federal' | 'state' | 'county' | 'city' | 'school' | 'special';
 
-/** What a contest decides: an office, a ballot measure, or whether to keep a judge. */
+/**
+ * What a contest decides.
+ *
+ * - `candidate`: A race for an office: voters choose among candidates.
+ * - `measure`: A ballot measure (proposition, amendment, bond, tax, referendum or initiative): voters
+ *   answer Yes or No.
+ * - `retention`: A judicial retention question: should this judge stay in office? Voters answer Yes or No.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#contest-kind
+ */
 export type ContestKind = 'candidate' | 'measure' | 'retention';
 
 /**
  * How votes are cast in a contest.
  *
- * - `plurality`: vote for one (or `votes_allowed`).
- * - `multi_seat`: vote for up to `votes_allowed`.
- * - `ranked_choice`: rank up to `ranks_allowed`.
- * - `approval`: vote for as many as you approve of.
- * - `yes_no`: a measure or retention question.
+ * - `plurality`: Vote for one: the candidate with the most votes wins (or goes to a runoff where a
+ *   majority is required).
+ * - `multi_seat`: Vote for up to N (votes_allowed): several seats are filled at once and the top N win.
+ * - `ranked_choice`: Ranked choice: voters rank up to ranks_allowed candidates; endorsements carry the
+ *   endorser’s rank 1, 2, 3…. rcv_rounds holds the official tabulation once there is one.
+ * - `approval`: Approval voting: voters mark every candidate they approve of; the most-approved win
+ *   (Fargo, St. Louis).
+ * - `yes_no`: A Yes or No question: every measure and retention question.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#vote-method
  */
 export type VoteMethod = 'plurality' | 'multi_seat' | 'ranked_choice' | 'approval' | 'yes_no';
 
-/** Kind of election. */
+/**
+ * Kind of election.
+ *
+ * - `general`: A general election: the November election (or a state’s regular election day) that fills
+ *   offices and decides measures.
+ * - `primary`: A primary: voters choose each party’s nominee, or (in top-two and Louisiana-style states)
+ *   the candidates who go on to the general.
+ * - `special`: A special election held outside the regular schedule, usually to fill a vacancy or decide a
+ *   measure.
+ * - `special_primary`: The primary for a special election.
+ * - `runoff`: A runoff between the leading candidates when no one won the earlier round outright (the
+ *   share needed is in the contest’s details.majority_required or vote_required).
+ * - `consolidated`: Several jurisdictions’ elections held together on one ballot (a city and school
+ *   election on the same day, for example); details.consolidated_with names them.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#election-type
+ */
 export type ElectionType = 'general' | 'primary' | 'special' | 'special_primary' | 'runoff' | 'consolidated';
 
-/** How a state runs its primaries. */
-export type PrimarySystem = 'none' | 'closed' | 'semi_closed' | 'open' | 'top_two' | 'nonpartisan';
+/**
+ * How a state runs its primaries.
+ *
+ * - `none`: No primary system is recorded for this election.
+ * - `closed`: Only voters registered with a party may vote in its primary.
+ * - `semi_closed`: A party’s registered voters, plus unaffiliated voters who choose that party’s ballot.
+ * - `open`: Any registered voter may choose any one party’s ballot.
+ * - `top_two`: Every candidate is on one primary ballot whatever their party, and the top two go on to the
+ *   general (Washington, California).
+ * - `top_four`: Every candidate is on one primary ballot, and the top four go on to a ranked-choice
+ *   general (Alaska).
+ * - `nonpartisan`: Candidates run without party labels; the leading candidates go on, or a majority wins
+ *   outright.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#primary-system
+ */
+export type PrimarySystem = 'none' | 'closed' | 'semi_closed' | 'open' | 'top_two' | 'top_four' | 'nonpartisan';
 
-/** An answer on a measure or retention question. */
+/**
+ * An answer on a measure or retention question.
+ *
+ * - `yes`: The Yes line of a measure or retention question. On an endorsement: the endorser says vote Yes.
+ * - `no`: The No line. On an endorsement: the endorser says vote No.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#measure-answer
+ */
 export type MeasureAnswer = 'yes' | 'no';
 
-/** The election stage an endorsement is for. */
+/**
+ * The election stage an endorsement is for.
+ *
+ * - `general`: The endorsement is for a general, special or consolidated election.
+ * - `primary`: The endorsement is for a primary or special primary.
+ * - `runoff`: The endorsement is for a runoff.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#stage
+ */
 export type EndorsementStage = 'general' | 'primary' | 'runoff';
 
-/** regular, special (rest of an unexpired term, or a special election), recall or retention. */
+/**
+ * What kind of race a candidate contest is.
+ *
+ * - `regular`: An election for a full term on the regular schedule.
+ * - `special`: An election for the rest of an unexpired term, or a contest in a special election.
+ * - `recall`: A recall: whether to remove an officeholder before the term ends (and, where the ballot has
+ *   one, who replaces them).
+ * - `retention`: A judicial retention question.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#race-type
+ */
 export type RaceType = 'regular' | 'special' | 'recall' | 'retention';
 
-/** The office a contest fills, normalized across states. */
+/**
+ * The office a contest fills, normalized across states.
+ *
+ * - `president`: President of the United States (with the vice president on the same ticket).
+ * - `us_senator`: U.S. Senator.
+ * - `us_representative`: U.S. Representative, or a non-voting delegate to the House.
+ * - `governor`: Governor.
+ * - `lieutenant_governor`: Lieutenant governor.
+ * - `attorney_general`: State attorney general.
+ * - `secretary_of_state`: Secretary of state.
+ * - `state_treasurer`: State treasurer.
+ * - `state_auditor`: State auditor, comptroller or controller.
+ * - `state_superintendent`: State superintendent of public instruction (the elected head of state
+ *   schools).
+ * - `insurance_commissioner`: State insurance commissioner.
+ * - `agriculture_commissioner`: State agriculture commissioner.
+ * - `land_commissioner`: State land commissioner (public lands).
+ * - `labor_commissioner`: State labor commissioner.
+ * - `utility_commission`: A state utility, public service or corporation commission seat.
+ * - `university_board`: A state university board of regents or trustees seat.
+ * - `state_board_of_education`: A state board of education seat.
+ * - `state_senator`: State senator (the upper house of the legislature; Nebraska’s one-house Legislature
+ *   too).
+ * - `state_representative`: State representative, assemblymember or delegate (the lower house).
+ * - `state_supreme_court`: A justice of the state’s highest court.
+ * - `state_appellate_court`: A judge of a state intermediate appeals court.
+ * - `trial_court`: A judge of a general trial court: superior, district, circuit, county or probate court.
+ * - `municipal_court`: A city or municipal court judge.
+ * - `magistrate`: A magistrate.
+ * - `justice_of_the_peace`: A justice of the peace.
+ * - `court_clerk`: Clerk of a court.
+ * - `mayor`: Mayor.
+ * - `local_executive`: Another elected local chief executive: county executive or judge-executive, borough
+ *   or parish president, first selectman, town or township supervisor, village president.
+ * - `city_council`: A city, town, village or borough council, select board or board of aldermen seat.
+ * - `county_legislature`: A county commission, board of supervisors, county council, quorum or fiscal
+ *   court, or police jury seat.
+ * - `neighborhood_council`: A neighborhood body: Washington, D.C.’s Advisory Neighborhood Commissions, for
+ *   example.
+ * - `school_board`: A school board or board of education seat.
+ * - `school_superintendent`: An elected county or district school superintendent.
+ * - `college_board`: A community college district board seat.
+ * - `special_district_board`: A board of a special district: hospital, fire, park, library, transit, port,
+ *   utility and similar.
+ * - `water_conservation_board`: A soil and water conservation, water, irrigation, drainage or flood
+ *   control district board.
+ * - `sheriff`: Sheriff.
+ * - `prosecutor`: District attorney, state’s attorney, county attorney or solicitor.
+ * - `coroner`: Coroner or medical examiner.
+ * - `constable`: Constable (or town sergeant).
+ * - `assessor`: Assessor, appraiser or property valuation administrator.
+ * - `tax_collector`: Tax collector or tax commissioner.
+ * - `treasurer`: A county, city or town treasurer.
+ * - `auditor`: A county, city or town auditor, comptroller or controller.
+ * - `recorder`: Recorder or register of deeds, wills or probate.
+ * - `clerk`: A county, city or town clerk, prothonotary or registrar.
+ * - `surveyor`: County surveyor or engineer.
+ * - `public_works`: Highway, road or street commissioner, or a public works office.
+ * - `police_fire`: An elected police chief, fire chief or marshal.
+ * - `other_county_office`: Another county office: public defender, public administrator, jailer, election
+ *   director and similar.
+ * - `other`: An office that fits none of the types above.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#office-type
+ */
 export type ContestOfficeType =
   | 'president' | 'us_senator' | 'us_representative'
   | 'governor' | 'lieutenant_governor' | 'attorney_general' | 'secretary_of_state' | 'state_treasurer' | 'state_auditor'
@@ -70,11 +223,79 @@ export type ContestOfficeType =
 export interface ContestOffice {
   type: ContestOfficeType;
   /** State courts are state, whatever district they sit in. */
-  level: 'federal' | 'state' | 'local';
-  branch: 'executive' | 'legislative' | 'judicial';
+  level: OfficeLevel;
+  branch: OfficeBranch;
 }
 
-/** A topic ballot measures are tagged with. */
+/**
+ * Level of government an office belongs to. State courts are state, whatever district they sit in.
+ *
+ * - `federal`: A federal office: president, U.S. senator, U.S. representative.
+ * - `state`: A statewide or state legislative office, or a state court judge (whatever district the court
+ *   sits in).
+ * - `local`: A county, city, town, school or special-district office.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#office-level
+ */
+export type OfficeLevel = 'federal' | 'state' | 'local';
+
+/**
+ * Branch of government an office belongs to.
+ *
+ * - `executive`: Runs government: president, governor, mayor, sheriff, clerk, treasurer and other
+ *   officers.
+ * - `legislative`: Makes laws or policy as a body: Congress, legislatures, councils, commissions and
+ *   boards.
+ * - `judicial`: A judge, justice, magistrate or justice of the peace.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#office-branch
+ */
+export type OfficeBranch = 'executive' | 'legislative' | 'judicial';
+
+/**
+ * A topic ballot measures are tagged with.
+ *
+ * - `taxes`: Taxes: new or changed taxes, levies, millage, fees, assessments and exemptions.
+ * - `bonds`: Bonds and borrowing: general obligation bonds, debt, lease-purchase.
+ * - `budgets`: Budgets and spending limits: appropriations, revenue and spending caps.
+ * - `education`: Education and schools: school funding, facilities, districts and colleges.
+ * - `housing`: Housing: affordable housing, rent, homelessness.
+ * - `elections`: Elections and voting: how elections are run, voting rules, redistricting.
+ * - `government`: Government structure and charters: charter amendments, who appoints whom, how offices
+ *   work.
+ * - `term_limits`: Term limits for elected officials.
+ * - `ethics`: Ethics and transparency: conflicts of interest, open records, campaign finance.
+ * - `local_boundaries`: Annexation, incorporation and dissolution: changing a city’s or district’s
+ *   boundaries, merging or dissolving one.
+ * - `public_safety`: Police, fire and emergency services.
+ * - `criminal_justice`: Criminal justice: sentencing, courts, jails, victims’ rights.
+ * - `health`: Health care and hospitals.
+ * - `mental_health`: Mental health and addiction services.
+ * - `environment`: Environment and conservation: open space, pollution, climate.
+ * - `energy`: Energy: power generation, fuels, renewables.
+ * - `water`: Water and sewer: water supply, treatment and rights.
+ * - `transportation`: Transportation and roads: transit, highways, streets.
+ * - `parks_recreation`: Parks and recreation.
+ * - `libraries`: Libraries.
+ * - `land_use`: Land use and zoning: development, planning, growth limits.
+ * - `economic_development`: Economic development: business incentives, tourism, development districts.
+ * - `cannabis`: Marijuana: legalization, sales, local bans.
+ * - `alcohol`: Alcohol: liquor sales, local option (wet/dry) questions.
+ * - `gambling`: Gambling: casinos, sports betting, lotteries.
+ * - `abortion`: Abortion and reproductive rights.
+ * - `civil_rights`: Civil rights: equal rights, discrimination, privacy.
+ * - `labor`: Labor and wages: minimum wage, paid leave, unions.
+ * - `pensions`: Pensions and public employees: retirement benefits, pay and rules for government workers.
+ * - `firearms`: Firearms.
+ * - `utilities`: Utilities and broadband: public utilities, franchises, internet service.
+ * - `immigration`: Immigration and citizenship.
+ * - `veterans`: Veterans’ benefits and services.
+ * - `animals`: Animals: animal welfare, hunting, fishing.
+ * - `seniors`: Seniors: services and tax relief for older residents.
+ * - `children`: Children and families: child care, youth services.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#measure-topic
+ */
 export type MeasureTopicSlug =
   | 'taxes' | 'bonds' | 'budgets' | 'education' | 'housing' | 'elections' | 'government' | 'term_limits' | 'ethics'
   | 'local_boundaries' | 'public_safety' | 'criminal_justice' | 'health' | 'mental_health' | 'environment' | 'energy'
@@ -87,7 +308,49 @@ export interface MeasureTopic {
   name: string;
 }
 
-/** Offices covered by {@link Officeholder}. */
+/**
+ * Level of an officeholder’s office.
+ *
+ * - `federal`: Congress.
+ * - `state`: A statewide office or the state legislature.
+ * - `city`: The Council of the District of Columbia.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#officeholder-level
+ */
+export type OfficeholderLevel = 'federal' | 'state' | 'city';
+
+/**
+ * Where a contact detail came from.
+ *
+ * - `wikidata`: Wikidata (CC0): website and social accounts.
+ * - `open_states`: Open States (CC0): an incumbent’s official email, phone, website and social accounts.
+ * - `fec_filing`: The campaign committee’s Federal Election Commission filing: its mailing address.
+ * - `official_filing`: A state, county or city candidate list or campaign-finance filing.
+ * - `campaign_website`: The campaign’s own website.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#contact-source-kind
+ */
+export type ContactSourceKind = 'wikidata' | 'open_states' | 'fec_filing' | 'official_filing' | 'campaign_website';
+
+/**
+ * Offices covered by officeholders.
+ *
+ * - `us_senator`: U.S. Senator.
+ * - `us_representative`: U.S. Representative, or a non-voting delegate.
+ * - `governor`: Governor (or D.C.’s mayor).
+ * - `lieutenant_governor`: Lieutenant governor.
+ * - `attorney_general`: State attorney general.
+ * - `secretary_of_state`: Secretary of state.
+ * - `chief_election_officer`: The state’s chief election officer, where that isn’t the secretary of state.
+ * - `treasurer`: State treasurer.
+ * - `auditor`: State auditor or comptroller.
+ * - `state_senator`: State senator (upper house).
+ * - `state_representative`: State representative, assemblymember or delegate (lower house).
+ * - `state_legislator`: A member of a one-house legislature (Nebraska).
+ * - `city_council`: A member of the Council of the District of Columbia.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#officeholder-office
+ */
 export type Office =
   | 'us_senator'
   | 'us_representative'
@@ -103,13 +366,69 @@ export type Office =
   | 'state_legislator'
   | 'city_council';
 
-/** What happened to an endorsement, in the stream. */
+/**
+ * What happened to an endorsement, in the stream.
+ *
+ * - `endorsement.created`: A new endorsement.
+ * - `endorsement.updated`: An endorsement changed; changed and previous say how.
+ * - `endorsement.deleted`: An endorsement was withdrawn or removed.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#event-type
+ */
 export type EventType = 'endorsement.created' | 'endorsement.updated' | 'endorsement.deleted';
 
-/** The short form of {@link EventType}, used in `types` filters. */
+/**
+ * What happened to an endorsement: the short form of the event type, used in types filters.
+ *
+ * - `created`: A new endorsement.
+ * - `updated`: An existing endorsement changed; changed lists the fields.
+ * - `deleted`: The endorsement was withdrawn by the endorser or removed by us.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#change
+ */
 export type ChangeType = 'created' | 'updated' | 'deleted';
 
-/** Every error code the API returns, in `error.code`. */
+/**
+ * Every error code the API returns, in error.code.
+ *
+ * - `missing_api_key`: No API key was sent. Send it as Authorization: Bearer <key> (or X-API-Key).
+ * - `invalid_api_key`: The key isn’t one we issued: mistyped, cut off, or from another site.
+ * - `revoked_api_key`: The key was revoked in the console. Use another key.
+ * - `expired_api_key`: The key passed the expiry date set on it.
+ * - `ip_not_allowed`: The key is limited to certain addresses and this request came from another.
+ * - `account_pending`: The account is waiting for approval.
+ * - `account_suspended`: The account is suspended. Write to us.
+ * - `account_closed`: The account is closed.
+ * - `insufficient_scope`: The key lacks the scope this endpoint needs (data:read, stream:read or
+ *   subscriptions:write).
+ * - `no_access`: The account’s purchases don’t include this part of the API (the stream, for example), or
+ *   they have ended.
+ * - `outside_purchase`: The record is in a state or election the account hasn’t bought. The message says
+ *   what it does cover.
+ * - `invalid_parameter`: A parameter has a value we can’t use: the message names it.
+ * - `invalid_cursor`: The cursor isn’t one we gave out. Pass next_cursor back exactly as you got it.
+ * - `invalid_filter`: A stream filter parameter is invalid: the message says which.
+ * - `invalid_json`: The request body isn’t valid JSON.
+ * - `invalid_subscription`: The subscription’s name or filter is invalid: the message says which.
+ * - `body_too_large`: The request body is over 100 KB.
+ * - `not_found`: Nothing has that id or slug.
+ * - `subscription_not_found`: No subscription in your account has that id or name.
+ * - `conflict`: A subscription with that name already exists in your account.
+ * - `too_many_requests`: Too many requests from one address. Wait for Retry-After seconds.
+ * - `too_many_failures`: Too many requests with a missing or wrong key from one address. Wait for
+ *   Retry-After seconds.
+ * - `rate_limit_exceeded`: Over your plan’s requests a minute. Wait for Retry-After seconds.
+ * - `daily_limit_exceeded`: Over your plan’s requests a day (the day is UTC).
+ * - `too_many_streams`: Your account already has as many streams open as its plan allows.
+ * - `cursor_expired`: The cursor or since time is older than the 7 days of changes the stream keeps. Start
+ *   again with from=earliest, and catch up with GET /v1/changes.
+ * - `warming_up`: The stream is still loading on this server. Try again in a few seconds.
+ * - `server_busy`: This server has too many open streams. Try again.
+ * - `not_available`: This data isn’t loaded yet (officeholders, for example). Try again later.
+ * - `internal_error`: Something went wrong on our side. Quote request_id when you write to us.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#error-code
+ */
 export type ErrorCode =
   | 'missing_api_key'
   | 'invalid_api_key'
@@ -222,7 +541,7 @@ export interface ElectionDetails {
   /** Which primary, where a state holds several. */
   primary?: string;
   /** Elections held on the same ballot. */
-  consolidated_with?: string;
+  consolidated_with?: string | string[];
   /** Date of a runoff, if one is needed. */
   runoff_date?: DateString;
   /** Date of the runoff election. */
@@ -268,13 +587,28 @@ export interface ElectionSummary extends Election {
 
 // ---------------------------------------------------------------- results
 
-/** `unofficial` (counts still changing) or `certified` (the canvass is certified). */
+/**
+ * How final a result is.
+ *
+ * - `unofficial`: Election-night and canvass counts: still changing. We read them again every day until
+ *   they’re certified.
+ * - `certified`: The canvass is certified: the final official count.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#result-status
+ */
 export type ResultStatus = 'unofficial' | 'certified';
 
 /**
- * Where a result comes from: `official` (a state, county, city or federal election office),
- * `compiled` (certified official returns compiled by a research group, summed to the contest; used
- * for past elections) or `party` (a party's announcement of the winner, with no vote counts).
+ * Where a result comes from.
+ *
+ * - `official`: A state, county, city or federal election office.
+ * - `compiled`: Certified official returns compiled by a research group (the MIT Election Data and Science
+ *   Lab’s precinct returns), summed to the contest. Used for past elections; official_url links to the
+ *   state’s own results where we have them.
+ * - `party`: A state or national party’s announcement of the winner, with no vote counts (party_reported
+ *   is true). Replaced as soon as an official result appears.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#result-source-kind
  */
 export type ResultSourceKind = 'official' | 'compiled' | 'party';
 
@@ -431,7 +765,7 @@ export interface Contact {
   /** Social accounts (full URLs), from Wikidata or the campaign's own site. Only networks found are present. */
   social: Partial<Record<SocialNetwork, string>>;
   /** Where each detail came from. */
-  sources: { url: string; kind: 'wikidata' | 'open_states' | 'fec_filing' | 'official_filing' | 'campaign_website'; read_on: DateString }[];
+  sources: { url: string; kind: ContactSourceKind; read_on: DateString }[];
 }
 
 /** FEC campaign finance totals for one two-year cycle. */
@@ -624,13 +958,28 @@ export interface EndorserDetail extends EndorserRef {
 // ------------------------------------------------------------- endorsements
 
 /**
- * How an endorsement got here: `automatic` (added by BallotData's automatic
- * watch of the endorser's own page), `staff` (entered by hand by BallotData
- * staff) or `data_load` (loaded in a researched data pass).
+ * How an endorsement got here.
+ *
+ * - `automatic`: Added by our automatic watch of the endorser’s own website. It only adds a candidate the
+ *   endorser’s own page names for that election; source_url is that page.
+ * - `staff`: Entered by hand by BallotData staff.
+ * - `data_load`: Loaded in one of our researched data passes.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#added-by
  */
 export type AddedBy = 'automatic' | 'staff' | 'data_load';
 
-/** The endorsement fields a change can touch. */
+/**
+ * The endorsement fields a change can touch.
+ *
+ * - `choice_id`: The endorser now backs a different choice in the same contest.
+ * - `rank`: The ranked-choice rank changed.
+ * - `statement`: What the endorser said changed.
+ * - `source_url`: Where it was published changed.
+ * - `published_on`: The publication date changed.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#changed-field
+ */
 export type HistoryField = 'choice_id' | 'rank' | 'statement' | 'source_url' | 'published_on';
 
 /** An endorsement's values at one point in time. */
@@ -734,7 +1083,7 @@ export interface Officeholder {
   office: Office;
   /** Title the state uses: "Assemblymember", "Delegate". */
   office_title: string;
-  level: 'federal' | 'state' | 'city';
+  level: OfficeholderLevel;
   state: StateCode;
   /** District as the legislature names it: "12", "1A", "21st Middlesex". */
   district: string | null;
@@ -1180,13 +1529,28 @@ export interface Issue {
 }
 
 /**
- * The answer to an issue's question: `supports` (yes), `opposes` (no),
- * `mixed` (yes to part, or yes with limits the summary spells out), or null
- * for a stated position that doesn't answer it either way.
+ * The answer to an issue’s yes/no question; null for a stated position that doesn’t answer it either way.
+ *
+ * - `supports`: Yes to the issue’s question.
+ * - `opposes`: No to the issue’s question.
+ * - `mixed`: Yes to part of it, or yes with limits the summary spells out.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#stance
  */
 export type IssueStance = 'supports' | 'opposes' | 'mixed';
 
-/** What kind of source a position was taken from. */
+/**
+ * What kind of source a position was taken from.
+ *
+ * - `candidate_website`: The candidate’s own campaign site.
+ * - `voting_record`: An official roll-call vote record (Congress’s or a legislature’s).
+ * - `official_statement`: An official statement: a press release or a statement from their office.
+ * - `questionnaire`: A published candidate questionnaire.
+ * - `debate`: A debate.
+ * - `news`: News reporting quoting or describing the candidate.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#issue-source-kind
+ */
 export type IssuePositionSourceKind =
   | 'candidate_website'
   | 'voting_record'

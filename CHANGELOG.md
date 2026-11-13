@@ -4,6 +4,12 @@
 
 For BallotData API 1.6.0.
 
+- Every enum type's doc comment lists each value and what it means, matching the API's new
+  [Field values](https://api.ballotdata.ai/docs/values) page. New named types for values that were
+  inline: `OfficeLevel`, `OfficeBranch`, `OfficeholderLevel` and `ContactSourceKind`.
+- `PrimarySystem` has `top_four` (Alaska), which the API already returned, and
+  `ElectionDetails.consolidated_with` can be a list of names.
+
 - Election results: `Contest.result` (`ContestResult`: status, `source_kind` official / compiled /
   party, `party_reported`, totals, the source and its URL, ranked-choice rounds, write-ins) and
   `Choice.result` (`ChoiceResult`: `votes`, `vote_pct`, `winner`), null until a source has a result.
