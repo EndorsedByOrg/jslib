@@ -26,6 +26,7 @@ const CALLS = {
   listCandidates: (c, q) => c.candidates.list(q),
   getCandidate: (c, q) => c.candidates.get(8811, q),
   listIssues: (c) => c.issues.list(),
+  listMeasureTopics: (c) => c.measureTopics.list(),
   listIssuePositions: (c, q) => c.issuePositions.list(q),
   exportElection: (c, q) => c.elections.export('ca-2026-11-03-general', q),
   listOfficeholders: (c, q) => c.officeholders.list(q),
