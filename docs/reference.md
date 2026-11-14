@@ -130,7 +130,10 @@ text instead, one row per endorsement. Throws `NotFoundError`, or `PermissionDen
 ### `contests.list(params?, options?)` → `PagePromise<Contest>`
 
 `GET /v1/contests`. The races on the ballot, each with its district, election, voting rules and every
-choice in ballot order.
+choice in ballot order. Each `district` has `partisanship` (the 2020 and 2024 presidential vote in it)
+and `demographics` (Census ACS estimates), and a `result` has `turnout` (registered voters and ballots
+cast in the jurisdiction), where an official source covers the area; see
+[Research data](#research-data).
 
 | Parameter | Type | |
 | --- | --- | --- |
@@ -302,7 +305,9 @@ them in each.
 ### `candidates.get(id, { lang }?, options?)` → `Promise<CandidateDetail>`
 
 `GET /v1/candidates/{id}`. One candidate with every contest they're on and every endorsement they
-received in each, and `issue_positions`: where they stand on common issues, each with its sources.
+received in each, `issue_positions`: where they stand on common issues, each with its sources, and
+(like every candidate in `candidates.list`) `background` (prior elected office, gender, military
+service) and `ideology` (DIME CFscore); see [Research data](#research-data).
 Throws `NotFoundError`, or `PermissionDeniedError` (`outside_purchase`).
 
 ## `client.issues`
@@ -505,13 +510,40 @@ All exported from the package root. The main ones:
 | `Endorsement`, `EndorsementDetail`, `EndorsementEndorser` | Endorsements. |
 | `ContestEndorsements`, `EndorsementPosition`, `EndorsementPick` | From `groupByContest`. |
 | `Officeholder`, `OfficeholderDetail` | Officeholders. |
+| `DistrictPartisanship`, `PresidentialVote`, `DistrictDemographics`, `Turnout`, `CandidateBackground`, `BackgroundSource`, `CandidateIdeology`, `IdeologyScore`, `EndorserFacts`, `EndorserFactSource`, `ResearchSource` | Research data (API 1.8.0). |
 | `EndorsementEvent`, `EventsPage`, `Filter`, `Subscription`, `SubscriptionInput`, `Postback` | Stream. |
 | `List…Params`, `GetContestParams`, `StreamParams`, `ListEventsParams`, `CoverageParams`, `LangParams`, `PageParams` | Parameters. |
-| `VoteMethod`, `ContestKind`, `Level`, `ElectionType`, `PrimarySystem`, `MeasureAnswer`, `EndorsementStage`, `RaceType`, `ContestOfficeType`, `OfficeLevel`, `OfficeBranch`, `MeasureTopicSlug`, `ResultStatus`, `ResultSourceKind`, `AddedBy`, `HistoryField`, `IssueStance`, `IssuePositionSourceKind`, `ContactSourceKind`, `Office`, `OfficeholderLevel`, `EventType`, `ChangeType`, `ErrorCode`, `Lang` | Enums. Each one's doc comment lists every value and what it means, as on the API's [Field values](https://api.ballotdata.ai/docs/values) page. |
+| `VoteMethod`, `ContestKind`, `Level`, `ElectionType`, `PrimarySystem`, `MeasureAnswer`, `EndorsementStage`, `RaceType`, `ContestOfficeType`, `OfficeLevel`, `OfficeBranch`, `MeasureTopicSlug`, `ResultStatus`, `ResultSourceKind`, `AddedBy`, `DateSource`, `PresidentialVoteMethod`, `BackgroundAttribute`, `BackgroundBasis`, `Gender`, `IdeologyMeasure`, `EndorserFactKind`, `HistoryField`, `IssueStance`, `IssuePositionSourceKind`, `ContactSourceKind`, `Office`, `OfficeholderLevel`, `EventType`, `ChangeType`, `ErrorCode`, `Lang` | Enums. Each one's doc comment lists every value and what it means, as on the API's [Field values](https://api.ballotdata.ai/docs/values) page. |
 | `ClientOptions`, `RequestOptions`, `Page`, `ResponseInfo`, `RateLimit`, `StreamOptions`, `StreamMessage`, `FollowOptions` | Client. |
 
 Each field is documented in the type definitions (`dist/*/types.d.ts`), which editors show as you
 type. `npm run docs` builds browsable HTML of all of it.
+
+## Research data
+
+API 1.8.0 adds the variables studies of endorsements control for to the records they describe, each
+value with its source. A `null` means none is recorded, never zero or no.
+
+| Field | Type | What |
+| --- | --- | --- |
+| `contest.district.partisanship` | `DistrictPartisanship` | The presidential vote in the district, 2020 and 2024, with `dem_two_party_pct`. FEC, MIT Election Data and Science Lab (CC0) and California Secretary of State counts. |
+| `contest.district.demographics` | `DistrictDemographics \| null` | American Community Survey 2020-2024 estimates. U.S. Census Bureau data; not endorsed by the Census Bureau. |
+| `contest.result.turnout` | `Turnout \| null` | Registered voters and ballots cast in the jurisdiction. EAC survey 2020-2024, state offices for 2026. |
+| `first_seen_on`, `date_source` on endorsements and picks | `DateString \| null`, `DateSource \| null` | The earliest date the endorsement can be shown to have been public. |
+| `candidate.background` | `CandidateBackground` | Prior elected office, gender, military service, only as a source states them. Race, ethnicity, religion and sexual orientation are not collected. |
+| `candidate.ideology` | `CandidateIdeology` | DIME CFscores. Cite: Bonica, Adam. 2024. Database on Ideology, Money in Politics, and Elections: Public version 4.0. Stanford University Libraries. https://data.stanford.edu/dime (ODC-BY 1.0). |
+| `endorser.facts` | `EndorserFacts` | FEC committee ids, IRS employer id and tax-exemption section, Department of Labor file number and union membership, founding year, parent organization. |
+
+```ts
+const contest = await client.contests.get(4410);
+const lean = contest.district.partisanship.president_2024?.dem_two_party_pct; // null if no official count
+const candidate = await client.candidates.get(8811);
+console.log(candidate.background.prior_offices, candidate.ideology.dime_cfscore);
+```
+
+Every field's meaning and source is in the API's
+[data dictionaries](https://api.ballotdata.ai/docs/dictionary) and the
+[researchers' guide](https://api.ballotdata.ai/docs/research#controls).
 
 ## `client.csv`
 
