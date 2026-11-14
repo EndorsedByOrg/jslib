@@ -77,6 +77,19 @@ test('every endpoint is reachable', async () => {
   assert.equal((await client.endorserCategories.list())[0].slug, 'labor');
   assert.equal((await client.endorsers.list({ q: 'labor' })).data[0].slug, 'sf-labor-council');
   assert.equal((await client.endorsers.get('sf-labor-council')).elections.length, 1);
+  const record = await client.endorsers.record('sf-labor-council', { stages: ['general'] });
+  assert.equal(record.totals.win_rate, 1);
+  assert.equal(record.by_stage[0].stage, 'general');
+  const { compared } = await client.endorsers.agreement('sf-labor-council', { with: 'sf-chronicle' });
+  assert.equal(compared[0].agreement_rate, 0.5);
+  // Lists as CSV: a page with its cursor, and every page joined with one header.
+  const first = await client.csv.page('/v1/endorsements', { states: 'CA' });
+  assert.equal(first.nextCursor, '2');
+  assert.equal(first.text.split('\r\n').filter(Boolean).length, 3);
+  assert.equal(
+    await client.csv.all('/v1/endorsements', { states: 'CA' }),
+    'endorsement_id,endorser_slug\r\n90211,sf-labor-council\r\n90212,sf-labor-council\r\n90213,sf-chronicle\r\n',
+  );
   assert.equal((await client.endorsements.list({ contest: 4410 })).data.length, 4);
   const endorsement = await client.endorsements.get(90211, { lang: 'es' });
   assert.equal(endorsement.endorser.category.slug, 'labor');

@@ -955,6 +955,66 @@ export interface EndorserDetail extends EndorserRef {
   elections: EndorserElection[];
 }
 
+/** How a set of an endorser's picks did. */
+export interface RecordTally {
+  /** Contests counted. */
+  contests: number;
+  /** Top picks in those contests: a ranked-choice first choice, every candidate of a vote-for-N slate, the Yes or No on a measure. */
+  picks: number;
+  /** Picks whose choice won: elected, advanced, or the measure answer carried. */
+  won: number;
+  /** Picks whose choice lost. */
+  lost: number;
+  /** Picks with no winner yet: no result, a result that doesn't name winners, or a runoff to come. */
+  undecided: number;
+  /** `won / (won + lost)`, 0 to 1; null until a pick is decided. */
+  win_rate: number | null;
+  /** The average vote share (0 to 100) of the picked choices that have one. */
+  avg_vote_pct: number | null;
+  /** Picks of a candidate who holds the seat now. */
+  incumbent_picks: number;
+  incumbent_won: number;
+  /** Picks of a candidate known not to hold the seat. Unknown incumbency and measure answers are in neither count. */
+  non_incumbent_picks: number;
+  non_incumbent_won: number;
+}
+
+/** An endorser's track record, from {@link EndorsersResource.record}. */
+export interface EndorserRecord {
+  endorser: EndorserRef;
+  totals: RecordTally;
+  /** The same counts for each kind of contest. */
+  by_kind: (RecordTally & { kind: ContestKind })[];
+  /** The same counts for each election stage. */
+  by_stage: (RecordTally & { stage: EndorsementStage })[];
+  /** The same counts for each election, newest first. */
+  elections: (RecordTally & { election: { slug: string; name: string; date: DateString; type: ElectionType } })[];
+}
+
+/** How often one other endorser took the same side. */
+export interface AgreementRow {
+  endorser: EndorserRef;
+  /** Contests both endorsers took a position in. */
+  shared_contests: number;
+  /** Contests where both made the same top picks. */
+  agreed: number;
+  /** Contests where their picks overlap but differ (vote-for-N slates). */
+  partly_agreed: number;
+  /** Contests where they have no top pick in common. */
+  disagreed: number;
+  /** `agreed / shared_contests`, 0 to 1. */
+  agreement_rate: number;
+}
+
+/** From {@link EndorsersResource.agreement}. */
+export interface EndorserAgreement {
+  endorser: EndorserRef;
+  /** Contests this endorser took a position in, with the filters applied. */
+  contests: number;
+  /** Other endorsers, most contests in common first. */
+  compared: AgreementRow[];
+}
+
 // ------------------------------------------------------------- endorsements
 
 /**
@@ -1305,6 +1365,28 @@ export interface ListEndorsersParams extends LangParams, PageParams {
   q?: string;
   /** Only endorsers with at least this many contests (`endorsement_count`). Pass 5 to match endorsedby.org's default list. */
   min_endorsements?: number;
+}
+
+/** Parameters for {@link EndorsersResource.record}. */
+export interface EndorserRecordParams extends LangParams {
+  elections?: ListParam;
+  /** States the contests are voted in. */
+  states?: ListParam<StateCode>;
+  contest_kinds?: ListParam<ContestKind>;
+  /** Election stages: `primary`, `general` or `runoff`. */
+  stages?: ListParam<EndorsementStage>;
+}
+
+/** Parameters for {@link EndorsersResource.agreement}. */
+export interface EndorserAgreementParams extends EndorserRecordParams {
+  /** Compare with only these endorsers (slugs). */
+  with?: ListParam;
+  /** Compare with only endorsers in these categories. */
+  categories?: ListParam;
+  /** Leave out endorsers with fewer contests in common than this. Default 3. */
+  min_shared?: number;
+  /** How many endorsers to compare with, 1–100. Default 25. */
+  limit?: number;
 }
 
 /** Parameters for {@link EndorsementsResource.list}. Limit 1–500, default 100. */

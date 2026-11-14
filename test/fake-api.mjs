@@ -109,6 +109,20 @@ export async function startFakeApi({ rateLimitFirst = 0, failFirst = 0 } = {}) {
     if (p === '/v1/elections') return send(200, { data: [{ ...election, contest_count: 2, endorsement_count: 4 }], next_cursor: null });
     if (p === '/v1/endorser-categories') return send(200, { data: [{ slug: 'labor', name: 'Labor', singular_name: 'Labor union', endorser_count: 1 }] });
     if (p === '/v1/endorsers') return send(200, { data: [{ ...laborCouncil, description: null, website_url: 'https://sflaborcouncil.org', logo_url: null, party: null, endorsement_count: 3 }], next_cursor: null });
+    if (p === '/v1/endorsers/sf-labor-council/record') {
+      const t = { contests: 2, picks: 2, won: 1, lost: 0, undecided: 1, win_rate: 1, avg_vote_pct: 55.5, incumbent_picks: 1, incumbent_won: 1, non_incumbent_picks: 0, non_incumbent_won: 0 };
+      return send(200, { data: { endorser: laborCouncil, totals: t, by_kind: [{ kind: 'candidate', ...t }], by_stage: [{ stage: 'general', ...t }], elections: [{ election: { slug: election.slug, name: election.name, date: election.date, type: election.type }, ...t }] } });
+    }
+    if (p === '/v1/endorsers/sf-labor-council/agreement') {
+      return send(200, { data: { endorser: laborCouncil, contests: 2, compared: [{ endorser: chronicle, shared_contests: 2, agreed: 1, partly_agreed: 0, disagreed: 1, agreement_rate: 0.5 }] } });
+    }
+    if (p === '/v1/endorsements' && url.searchParams.get('format') === 'csv') {
+      const rows = ['90211,sf-labor-council', '90212,sf-labor-council', '90213,sf-chronicle'];
+      const start = Number(url.searchParams.get('cursor') ?? 0);
+      const next = start + 2 < rows.length ? String(start + 2) : null;
+      res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', ...(next ? { 'X-Next-Cursor': next } : {}) });
+      return res.end(`endorsement_id,endorser_slug\r\n${rows.slice(start, start + 2).join('\r\n')}\r\n`);
+    }
     if (p === '/v1/endorsers/sf-labor-council') {
       return send(200, { data: { ...laborCouncil, description: null, website_url: 'https://sflaborcouncil.org', logo_url: null, party: null, elections: [{ election: election.slug, name: election.name, date: election.date, contests: 2 }] } });
     }

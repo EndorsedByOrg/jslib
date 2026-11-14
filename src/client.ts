@@ -4,6 +4,7 @@ import { ChangesResource } from './resources/changes.js';
 import { ContestsResource, MeasureTopicsResource } from './resources/contests.js';
 import { ElectionsResource } from './resources/elections.js';
 import { EndorsementsResource } from './resources/endorsements.js';
+import { CsvResource } from './resources/csv.js';
 import { EndorsersResource } from './resources/endorsers.js';
 import { IssuePositionsResource, IssuesResource } from './resources/issues.js';
 import { OfficeholdersResource } from './resources/officeholders.js';
@@ -59,6 +60,9 @@ export class BallotData {
   /** `/v1/subscriptions`. */
   readonly subscriptions: SubscriptionsResource;
 
+  /** Lists as CSV (`format=csv`). */
+  readonly csv: CsvResource;
+
   readonly #transport: Transport;
 
   /**
@@ -84,6 +88,7 @@ export class BallotData {
     this.stream = new StreamResource(transport);
     this.events = new EventsResource(transport);
     this.subscriptions = new SubscriptionsResource(transport);
+    this.csv = new CsvResource(transport);
   }
 
   /** The API origin requests go to. */

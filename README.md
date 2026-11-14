@@ -96,6 +96,9 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.endorserCategories.list({ lang })` | `GET /v1/endorser-categories` | `EndorserCategory[]` |
 | `client.endorsers.list(params)` | `GET /v1/endorsers` | pages of `Endorser` |
 | `client.endorsers.get(slug, { lang })` | `GET /v1/endorsers/{slug}` | `EndorserDetail` |
+| `client.endorsers.record(slug, { elections, states, contest_kinds, stages })` | `GET /v1/endorsers/{slug}/record` | `EndorserRecord`: how their picks did |
+| `client.endorsers.agreement(slug, { with, categories, min_shared, limit, … })` | `GET /v1/endorsers/{slug}/agreement` | `EndorserAgreement`: who takes the same side |
+| `client.csv.page(path, params)` / `.pages()` / `.all()` | any list with `format=csv` | CSV text, paged by cursor |
 | `client.endorsements.list(params)` | `GET /v1/endorsements` | pages of `Endorsement` (the basics) |
 | `client.endorsements.get(id, { lang })` | `GET /v1/endorsements/{id}` | `EndorsementDetail` (the full record) |
 | `client.endorsements.history(id)` | `GET /v1/endorsements/{id}/history` | `HistoryEntry[]` (every change) |
