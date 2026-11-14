@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.6.0
+
+For BallotData API 1.10.0.
+
+- `client.ballot.lookup({ address })` (`POST /v1/ballot`): the districts and every contest on the
+  ballot at a street address, or at `latitude` and `longitude` (`BallotLookup`, `BallotElection`,
+  `BallotContest`, `BallotChoice`, `BallotDistrict`, `BallotLookupInput`). The address goes in the
+  request body and is never stored.
+
 ## 2.5.0
 
 For BallotData API 1.9.0.

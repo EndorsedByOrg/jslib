@@ -159,6 +159,24 @@ an array of `{ endorser, picks }`). Throws `NotFoundError`.
 | `endorser_states` | `ListParam` | Only endorsers based in these states, or `national`. |
 | `lang` | `'en' \| 'es'` | |
 
+## `client.ballot`
+
+### `ballot.lookup(input, options?)` → `Promise<BallotLookup>`
+
+`POST /v1/ballot`. The districts a street address is in, on today's lines, and every contest on its
+ballot, by election and in ballot order (`elections`, each `{ election, contests,
+contests_outside_purchase }`). The address goes in the request body, is found with the U.S. Census
+Bureau's geocoder and is never stored. Throws `NotFoundError` (`address_not_found`) when the address
+isn't found, and `BadRequestError` for a ZIP code, city or state alone.
+
+| Field | Type | |
+| --- | --- | --- |
+| `address` | `string` | A street address with a house number, with the city and state or ZIP code. |
+| `latitude`, `longitude` | `number` | A point, instead of an address. |
+| `elections` | `string[]` | Only these elections (slugs). Default: every election from 60 days ago on. |
+| `party` | `string` | In a partisan primary, only this party's contests (and the nonpartisan ones). |
+| `lang` | `'en' \| 'es'` | |
+
 ## `client.endorserCategories`
 
 ### `endorserCategories.list(params?, options?)` → `Promise<EndorserCategory[]>`
