@@ -100,6 +100,9 @@ test('every endpoint is reachable', async () => {
   await assert.rejects(client.endorsements.get(9031), (err) => err instanceof PermissionDeniedError && err.code === 'outside_purchase');
   assert.equal((await client.officeholders.list({ states: 'CA' })).data[0].person_id, 'p-1');
   assert.equal((await client.officeholders.get('p-1')).name, 'Alex Morgan');
+  assert.equal((await client.offices.list({ states: 'CA' })).data[0].slug, 'us-house-ca-12');
+  assert.equal((await client.offices.get('us-house-ca-12')).contests[0].seat_change.outcome, 'open_seat');
+  assert.equal((await client.officeTerms.list({ on: '2021-06-01' })).data[0].how, 'elected');
   assert.equal((await client.events.list({ cursor: 'c0' })).data.length, 3);
 });
 

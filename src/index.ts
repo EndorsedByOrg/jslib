@@ -1,6 +1,7 @@
 /**
  * The official JavaScript and TypeScript client for the BallotData API: U.S.
- * ballots, endorsers and endorsements, officeholders, and a live stream of
+ * ballots, endorsers and endorsements, officeholders, offices and their holders
+ * since 2020, and a live stream of
  * endorsement changes.
  *
  * ```ts
@@ -49,6 +50,7 @@ export { EndorsersResource } from './resources/endorsers.js';
 export { CsvResource } from './resources/csv.js';
 export type { CsvPath } from './resources/csv.js';
 export { OfficeholdersResource } from './resources/officeholders.js';
+export { OfficesResource, OfficeTermsResource } from './resources/offices.js';
 export { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 export { EndorsementStream, EventsResource, StreamResource } from './resources/stream.js';
 export type { FollowOptions, StreamMessage, StreamOptions } from './resources/stream.js';

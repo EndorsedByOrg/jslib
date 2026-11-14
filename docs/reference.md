@@ -9,7 +9,7 @@ Every class, method, parameter and type in `ballotdata`. For a tour, start with 
 - [states](#clientstates) · [coverage](#clientcoverage) · [elections](#clientelections) ·
   [contests](#clientcontests) · [endorserCategories](#clientendorsercategories) ·
   [endorsers](#clientendorsers) · [csv](#clientcsv) · [endorsements](#clientendorsements) ·
-  [officeholders](#clientofficeholders) · [stream](#clientstream) · [events](#clientevents) ·
+  [officeholders](#clientofficeholders) · [offices](#clientoffices) · [officeTerms](#clientofficeterms) · [stream](#clientstream) · [events](#clientevents) ·
   [subscriptions](#clientsubscriptions)
 - [Escape hatches: `request` and `paginate`](#escape-hatches)
 - [Postbacks](#postbacks)
@@ -361,6 +361,67 @@ Open States.
 `GET /v1/officeholders/{id}`. One officeholder by `person_id`, with every seat they hold (`seats`).
 Throws `NotFoundError`.
 
+## `client.offices`
+
+API 1.9.0. Seats that last across elections and redistricting (`us-house-ca-12`, `oh-governor`, a
+numbered council position, an at-large board), who held each since 2020, and whether each result
+changed hands.
+
+### `offices.list(params?, options?)` → `PagePromise<OfficeRecord>`
+
+`GET /v1/offices`. Each seat with its district versions (`districts`, plan-2020 lines first) and
+`current_holders`.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `states` | `ListParam<StateCode>` | |
+| `levels` | `ListParam<OfficeRecordLevel>` | `federal`, `state`, `local`. |
+| `office_types` | `ListParam<ContestOfficeType>` | |
+| `districts` | `ListParam` | OCD ids: seats elected on any of them, under any plan. |
+| `q` | `string` | Name contains. |
+| `limit` | `number` | 1–500, default 100. |
+| `cursor` | `string` | |
+
+### `offices.get(slug, options?)` → `Promise<OfficeDetail>`
+
+`GET /v1/offices/{slug}`. One seat with every term (`terms`) and every contest (`contests`), each
+with its `seat_change`. Throws `NotFoundError`.
+
+## `client.officeTerms`
+
+### `officeTerms.list(params?, options?)` → `PagePromise<OfficeTerm>`
+
+`GET /v1/office-terms`. Terms in office since 2020: who, which seat, from when to when, how they got
+it (`how`: elected, special_election, appointed, succeeded, retained, holdover) and how it ended
+(`end_reason`).
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `states`, `levels`, `office_types` | | As on `offices.list`. |
+| `offices` | `ListParam` | Office slugs. |
+| `on` | `DateString` | Who held office that day. |
+| `since` | `DateString` | Terms that ended on or after this day, or are still going. |
+| `person` | `string` | One person's terms, by `person_key`. |
+| `hows` | `ListParam<TermHow>` | |
+| `q` | `string` | Holder's name contains. |
+| `limit` | `number` | 1–500, default 100. |
+| `cursor` | `string` | |
+
+### Seat flips
+
+Every decided contest linked to its seat has `result.seat_change` (`SeatChange`): `outcome`
+(`incumbent_reelected`, `incumbent_defeated`, `open_seat`, `new_seat`, `unknown`; for a body
+`incumbents_reelected` or `mixed`) and, for a partisan seat, `flipped`, judged against whoever held
+the seat going in, so appointments and party switches count. Contests carry `seat` (`ContestSeat`).
+
+```ts
+const seat = await client.offices.get('us-house-ca-12');
+for (const c of seat.contests) {
+  if (c.seat_change) console.log(c.election_date, c.seat_change.outcome, c.seat_change.flipped);
+}
+const { data: inOffice } = await client.officeTerms.list({ states: 'CA', on: '2021-06-01' });
+```
+
 ## `client.stream`
 
 Stream parameters, shared by `stream.connect`, `stream.endorsements`, `events.list` and
@@ -510,10 +571,11 @@ All exported from the package root. The main ones:
 | `Endorsement`, `EndorsementDetail`, `EndorsementEndorser` | Endorsements. |
 | `ContestEndorsements`, `EndorsementPosition`, `EndorsementPick` | From `groupByContest`. |
 | `Officeholder`, `OfficeholderDetail` | Officeholders. |
+| `OfficeRecord`, `OfficeDetail`, `OfficeDistrict`, `CurrentHolder`, `OfficeTerm`, `ContestSeat`, `SeatChange` | Offices, terms and seat flips (API 1.9.0). |
 | `DistrictPartisanship`, `PresidentialVote`, `DistrictDemographics`, `Turnout`, `CandidateBackground`, `BackgroundSource`, `CandidateIdeology`, `IdeologyScore`, `EndorserFacts`, `EndorserFactSource`, `ResearchSource` | Research data (API 1.8.0). |
 | `EndorsementEvent`, `EventsPage`, `Filter`, `Subscription`, `SubscriptionInput`, `Postback` | Stream. |
 | `List…Params`, `GetContestParams`, `StreamParams`, `ListEventsParams`, `CoverageParams`, `LangParams`, `PageParams` | Parameters. |
-| `VoteMethod`, `ContestKind`, `Level`, `ElectionType`, `PrimarySystem`, `MeasureAnswer`, `EndorsementStage`, `RaceType`, `ContestOfficeType`, `OfficeLevel`, `OfficeBranch`, `MeasureTopicSlug`, `ResultStatus`, `ResultSourceKind`, `AddedBy`, `DateSource`, `PresidentialVoteMethod`, `BackgroundAttribute`, `BackgroundBasis`, `Gender`, `IdeologyMeasure`, `EndorserFactKind`, `HistoryField`, `IssueStance`, `IssuePositionSourceKind`, `ContactSourceKind`, `Office`, `OfficeholderLevel`, `EventType`, `ChangeType`, `ErrorCode`, `Lang` | Enums. Each one's doc comment lists every value and what it means, as on the API's [Field values](https://api.ballotdata.ai/docs/values) page. |
+| `VoteMethod`, `ContestKind`, `Level`, `ElectionType`, `PrimarySystem`, `MeasureAnswer`, `EndorsementStage`, `RaceType`, `ContestOfficeType`, `OfficeLevel`, `OfficeBranch`, `MeasureTopicSlug`, `ResultStatus`, `ResultSourceKind`, `AddedBy`, `DateSource`, `PresidentialVoteMethod`, `BackgroundAttribute`, `BackgroundBasis`, `Gender`, `IdeologyMeasure`, `EndorserFactKind`, `HistoryField`, `IssueStance`, `IssuePositionSourceKind`, `ContactSourceKind`, `Office`, `OfficeholderLevel`, `OfficeRecordLevel`, `TermHow`, `TermEndReason`, `TermDatesBasis`, `TermSourceKind`, `SeatOutcome`, `EventType`, `ChangeType`, `ErrorCode`, `Lang` | Enums. Each one's doc comment lists every value and what it means, as on the API's [Field values](https://api.ballotdata.ai/docs/values) page. |
 | `ClientOptions`, `RequestOptions`, `Page`, `ResponseInfo`, `RateLimit`, `StreamOptions`, `StreamMessage`, `FollowOptions` | Client. |
 
 Each field is documented in the type definitions (`dist/*/types.d.ts`), which editors show as you
@@ -552,7 +614,7 @@ methods return, paged the same way, and `params` are the matching list method's.
 CSV are in the [data dictionaries](https://api.ballotdata.ai/docs/dictionary#csv).
 
 `path` is one of `/v1/elections`, `/v1/coverage`, `/v1/contests`, `/v1/endorsers`,
-`/v1/endorsements`, `/v1/candidates`, `/v1/issue-positions`, `/v1/officeholders`,
+`/v1/endorsements`, `/v1/candidates`, `/v1/issue-positions`, `/v1/officeholders`, `/v1/offices`, `/v1/office-terms`,
 `/v1/endorsers/{slug}/record` or `/v1/endorsers/{slug}/agreement`.
 
 ### `csv.page(path, params?, options?)` → `Promise<CsvPage>`
