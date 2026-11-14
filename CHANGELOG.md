@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.4.0
+
+For BallotData API 1.8.0.
+
+- Research data on the records it describes, each value with its source: `District.partisanship`
+  (`DistrictPartisanship`, `PresidentialVote`), `District.demographics` (`DistrictDemographics`),
+  `ContestResult.turnout` (`Turnout`), `background` (`CandidateBackground`, `BackgroundSource`) and
+  `ideology` (`CandidateIdeology`, `IdeologyScore`) on `CandidateSummary` and `CandidateDetail`, and
+  `facts` (`EndorserFacts`, `EndorserFactSource`) on `Endorser` and `EndorserDetail`.
+- `first_seen_on` and `date_source` (`DateSource`) on `Endorsement`, `EndorsementDetail`, `Pick` and
+  `CandidateEndorsement`; `groupByContest` keeps `first_seen_on` on each `EndorsementPick`.
+- New value types `PresidentialVoteMethod`, `BackgroundAttribute`, `BackgroundBasis`, `Gender`,
+  `IdeologyMeasure` and `EndorserFactKind`.
+
 ## 2.3.0
 
 For BallotData API 1.7.0.

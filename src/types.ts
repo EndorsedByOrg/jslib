@@ -663,6 +663,8 @@ export interface ContestResult {
   /** Ranked choice: the official tabulation's rounds, as the source reports them. */
   rcv_rounds: Record<string, unknown>[] | null;
   notes: string | null;
+  /** Registered voters and ballots cast in the jurisdiction; null where none (API 1.8.0). */
+  turnout: Turnout | null;
   /** When BallotData last read it from the source. */
   fetched_at: string;
 }
@@ -674,6 +676,196 @@ export interface ContestResultBrief {
   party_reported: boolean;
   total_votes: number | null;
   source_url: string;
+}
+
+// ------------------------------------------------------------ research data
+// API 1.8.0: the district, turnout, candidate and endorser data researchers
+// control for. Every value carries its source; null means none is recorded.
+
+/** Where a research value came from. */
+export interface ResearchSource {
+  /** Who published it. */
+  name: string;
+  /** Where it was published. */
+  url: string;
+}
+
+/**
+ * How a district's presidential vote was counted:
+ * - `official_district`: an election office published it for the district.
+ * - `official_county`: the district is a county: its official returns.
+ * - `statewide`: the district is the state: its official returns.
+ * - `aggregated_precincts`: precinct returns summed (reserved, not used yet).
+ */
+export type PresidentialVoteMethod = 'official_district' | 'official_county' | 'statewide' | 'aggregated_precincts';
+
+/** The presidential vote within one district in one year. */
+export interface PresidentialVote {
+  dem_votes: number;
+  rep_votes: number;
+  /** Every vote for president, write-ins included. */
+  total_votes: number;
+  /** 100 × dem / (dem + rep). Subtract 50 for the usual lean. */
+  dem_two_party_pct: number;
+  method: PresidentialVoteMethod;
+  source: ResearchSource;
+  retrieved_on: DateString;
+}
+
+/** A district's partisan lean: the presidential vote in it. null where no official count covers exactly its area. */
+export interface DistrictPartisanship {
+  president_2016: PresidentialVote | null;
+  president_2020: PresidentialVote | null;
+  president_2024: PresidentialVote | null;
+}
+
+/**
+ * American Community Survey 5-year estimates for a district (U.S. Census
+ * Bureau, public domain; not endorsed by the Census Bureau). Shares are 0 to
+ * 100; medians are null for a district made of several Census areas.
+ */
+export interface DistrictDemographics {
+  /** Last year of the 5-year estimates: 2024 = 2020-2024. */
+  acs_year: number;
+  population: number | null;
+  citizen_voting_age_population: number | null;
+  median_household_income: number | null;
+  median_age: number | null;
+  pct_bachelors_or_higher: number | null;
+  pct_white_alone_not_hispanic: number | null;
+  pct_black_alone: number | null;
+  pct_asian_alone: number | null;
+  pct_hispanic: number | null;
+  pct_foreign_born: number | null;
+  pct_owner_occupied: number | null;
+  pct_below_poverty: number | null;
+  source: ResearchSource;
+  retrieved_on: DateString;
+}
+
+/** Registered voters and ballots cast in a contest's jurisdiction for its election. */
+export interface Turnout {
+  /** null where the source gives none (North Dakota has no registration). */
+  registered_voters: number | null;
+  ballots_cast: number | null;
+  /** The source's own figure, else ballots_cast / registered_voters × 100. Never against voting-age population. */
+  turnout_pct: number | null;
+  status: ResultStatus;
+  source: ResearchSource;
+  retrieved_on: DateString;
+}
+
+/**
+ * Where an endorsement's `first_seen_on` came from:
+ * - `page`: the endorsement page's own publication date.
+ * - `press_release`: the date on the endorser's press release.
+ * - `archive`: the earliest Internet Archive capture (an upper bound; not used yet).
+ * - `feed`: the endorser's RSS or Atom feed entry (not used yet).
+ */
+export type DateSource = 'page' | 'press_release' | 'archive' | 'feed';
+
+/** `held_elected_office`, `prior_office`, `gender` or `veteran`. */
+export type BackgroundAttribute = 'held_elected_office' | 'prior_office' | 'gender' | 'veteran';
+
+/**
+ * What a background fact rests on:
+ * - `our_results`: our election results.
+ * - `officeholder_record`: our officeholder records (Open States).
+ * - `official_roster`: the Congressional Directory or the congress-legislators list.
+ * - `candidate_statement`: the candidate's own words (in `quote`).
+ */
+export type BackgroundBasis = 'our_results' | 'officeholder_record' | 'official_roster' | 'candidate_statement';
+
+/** Only where an official roster or the candidate's own words state it. */
+export type Gender = 'woman' | 'man' | 'nonbinary';
+
+/** One background fact with its source. */
+export interface BackgroundSource {
+  attribute: BackgroundAttribute;
+  /** "true", an office title, or a gender. */
+  value: string;
+  basis: BackgroundBasis;
+  /** The candidate's own words, for a candidate_statement. */
+  quote: string | null;
+  source: ResearchSource;
+  retrieved_on: DateString;
+}
+
+/**
+ * Prior elected office, gender and military service, only as a source states
+ * them. null means unknown, never no. Race, ethnicity, religion and sexual
+ * orientation are not collected.
+ */
+export interface CandidateBackground {
+  held_elected_office: boolean | null;
+  prior_offices: string[];
+  gender: Gender | null;
+  veteran: boolean | null;
+  sources: BackgroundSource[];
+}
+
+/**
+ * A published ideology measure:
+ * - `dime_cfscore`: Bonica's DIME campaign-finance score (loaded).
+ * - `dw_nominate`, `shor_mccarty`: not loaded (their terms don't allow commercial use).
+ */
+export type IdeologyMeasure = 'dime_cfscore' | 'dw_nominate' | 'shor_mccarty';
+
+/** One published ideology estimate: its authors' estimate, not a fact about the person. */
+export interface IdeologyScore {
+  measure: IdeologyMeasure;
+  /** dime_cfscore: roughly -2 to 2, negative left and positive right. */
+  score: number;
+  second_dimension: number | null;
+  /** Years covered, e.g. "1979-2024". */
+  period: string;
+  /** The source's key for the person (the FEC candidate id for DIME). */
+  person_key: string;
+  /** e.g. "ODC-BY 1.0": cite DIME when you use it. */
+  license: string;
+  source: ResearchSource;
+  retrieved_on: DateString;
+}
+
+/** A candidate's published ideology scores. Cite Bonica, DIME v4.0 (Stanford University Libraries, ODC-BY 1.0) when you use `dime_cfscore`. */
+export interface CandidateIdeology {
+  dime_cfscore: number | null;
+  scores: IdeologyScore[];
+}
+
+/** `fec_committee_id`, `ein`, `irs_subsection`, `union_members`, `olms_file_number`, `founded_year` or `parent_organization`. */
+export type EndorserFactKind =
+  | 'fec_committee_id'
+  | 'ein'
+  | 'irs_subsection'
+  | 'union_members'
+  | 'olms_file_number'
+  | 'founded_year'
+  | 'parent_organization';
+
+/** One endorser fact with its source. */
+export interface EndorserFactSource {
+  fact: EndorserFactKind;
+  value: string;
+  /** The date the fact was true per its source. */
+  as_of: DateString;
+  source: ResearchSource;
+  retrieved_on: DateString;
+}
+
+/** An endorser's identifiers and size, from the FEC, the IRS, the Department of Labor and its own About page. */
+export interface EndorserFacts {
+  fec_committee_ids: string[];
+  ein: string | null;
+  /** e.g. "501(c)(4)". */
+  irs_subsection: string | null;
+  /** Members on the union's latest Department of Labor annual report. */
+  union_members: number | null;
+  union_members_as_of: DateString | null;
+  olms_file_number: string | null;
+  founded_year: number | null;
+  parent_organization: string | null;
+  sources: EndorserFactSource[];
 }
 
 // ---------------------------------------------------------------- contests
@@ -689,6 +881,10 @@ export interface District {
   /** statewide, congressional, state_upper, state_lower, county, council, school, … */
   type: string;
   state: StateCode | null;
+  /** The presidential vote in the district (API 1.8.0). */
+  partisanship: DistrictPartisanship;
+  /** ACS estimates for the district; null where there are none (API 1.8.0). */
+  demographics: DistrictDemographics | null;
 }
 
 /** Facts about a contest. Only keys that apply are present. */
@@ -890,6 +1086,10 @@ export interface Pick {
   source_url: string | null;
   /** When it was published. */
   published_on: DateString | null;
+  /** The earliest date it can be shown to have been public; null where undated (API 1.8.0). */
+  first_seen_on: DateString | null;
+  /** Where first_seen_on came from. */
+  date_source: DateSource | null;
   added_by: AddedBy;
   stage: EndorsementStage;
 }
@@ -931,6 +1131,8 @@ export interface Endorser extends EndorserRef {
   party: Party | null;
   /** Contests this endorser takes a position in, across every election you can read. A ranked-choice order or vote-for-N slate counts once. */
   endorsement_count: number;
+  /** Identifiers and size, with sources (API 1.8.0). */
+  facts: EndorserFacts;
 }
 
 /** An election an endorser endorsed in, inside {@link EndorserDetail}. */
@@ -951,6 +1153,8 @@ export interface EndorserDetail extends EndorserRef {
   party: Party | null;
   /** Contests this endorser takes a position in, across every election you can read. */
   endorsement_count: number;
+  /** Identifiers and size, with sources (API 1.8.0). */
+  facts: EndorserFacts;
   /** Elections the endorser has endorsed in, newest first. */
   elections: EndorserElection[];
 }
@@ -1089,6 +1293,10 @@ export interface Endorsement {
   rank: number | null;
   /** When it was published. */
   published_on: DateString | null;
+  /** The earliest date it can be shown to have been public; null where undated (API 1.8.0). */
+  first_seen_on: DateString | null;
+  /** Where first_seen_on came from. */
+  date_source: DateSource | null;
   added_by: AddedBy;
   stage: EndorsementStage;
   /** Who made the endorsement. */
@@ -1120,6 +1328,10 @@ export interface EndorsementDetail {
   /** Where it was published. */
   source_url: string | null;
   published_on: DateString | null;
+  /** The earliest date it can be shown to have been public; null where undated (API 1.8.0). */
+  first_seen_on: DateString | null;
+  /** Where first_seen_on came from. */
+  date_source: DateSource | null;
   /** When BallotData collected it. */
   retrieved_at: DateTimeString;
   added_by: AddedBy;
@@ -1573,6 +1785,10 @@ export interface CandidateSummary {
   incumbent: boolean | null;
   ids: CandidateIds;
   contact: Contact;
+  /** Prior elected office, gender and military service, with sources (API 1.8.0). */
+  background: CandidateBackground;
+  /** Published ideology scores (API 1.8.0). */
+  ideology: CandidateIdeology;
   /** The contests they're on that you can read, newest election first. */
   contests: CandidateContest[];
 }
@@ -1585,6 +1801,10 @@ export interface CandidateEndorsement {
   statement: string | null;
   source_url: string | null;
   published_on: DateString | null;
+  /** The earliest date it can be shown to have been public; null where undated (API 1.8.0). */
+  first_seen_on: DateString | null;
+  /** Where first_seen_on came from. */
+  date_source: DateSource | null;
   added_by: AddedBy;
   stage: EndorsementStage;
 }

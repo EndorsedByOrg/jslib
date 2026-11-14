@@ -16,6 +16,8 @@ export interface EndorsementPick {
   /** Ranked choice: 1 for first choice, 2 for second, …; null otherwise. */
   rank: number | null;
   published_on: DateString | null;
+  /** The earliest date the endorsement can be shown to have been public. */
+  first_seen_on: DateString | null;
 }
 
 /** One endorser's picks in a contest, from {@link groupByContest}. */
@@ -56,6 +58,7 @@ export function groupByContest(endorsements: Iterable<Endorsement>): ContestEndo
       measure_answer: e.choice.measure_answer,
       rank: e.rank,
       published_on: e.published_on,
+      first_seen_on: e.first_seen_on ?? null,
     });
   }
   return [...contests.values()].map(({ contest, election, byEndorser }) => ({
