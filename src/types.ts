@@ -2222,3 +2222,152 @@ export interface BallotLookup {
   /** Earliest first; empty when there are no contests at the address. */
   elections: BallotElection[];
 }
+
+// ------------------------------------------------------------------ results
+// API 1.10.0: who won, by how much, and whether the seat changed hands.
+
+/**
+ * The stage of an election: general (including specials), primary or runoff.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#election-stage
+ */
+export type ElectionStage = 'general' | 'primary' | 'runoff';
+
+/** How {@link SeatChangesResource.get} splits its counts. */
+export type SeatChangeGroup = 'state' | 'office_type' | 'election' | 'stage';
+
+/** One choice's line in a {@link Result}. */
+export interface ResultChoice {
+  choice_id: number;
+  /** As printed: a candidate's name, or Yes or No. */
+  label: string;
+  measure_answer: 'yes' | 'no' | null;
+  candidate_id: number | null;
+  /** The party the choice ran under, as printed. */
+  party: string | null;
+  /** null only on a party-reported result. */
+  votes: number | null;
+  /** 0–100. */
+  vote_pct: number | null;
+  /** null when not decided or not stated. */
+  winner: boolean | null;
+}
+
+/** The deciding margin: between the last winning place and the next. */
+export interface ResultMargin {
+  votes: number;
+  pct_points: number;
+  /** The choice in the last winning place. */
+  ahead: string;
+  /** The choice in the next place. */
+  behind: string;
+  /** How many places win: the choices marked winner, else the votes allowed. */
+  winning_places: number;
+}
+
+/** One contest's result in brief, from {@link ResultsResource.list}. */
+export interface Result {
+  contest_id: number;
+  title: string;
+  kind: ContestKind;
+  vote_method: VoteMethod;
+  votes_allowed: number | null;
+  ranks_allowed: number | null;
+  measure_code: string | null;
+  office: ContestOffice | null;
+  seat: ContestSeat | null;
+  race_type: RaceType | null;
+  partisan: boolean | null;
+  unopposed: boolean;
+  district: { id: number; ocd_id: string | null; name: string; level: Level; type: string; state: StateCode | null };
+  election: { slug: string; name: string; date: DateString; type: ElectionType; stage: ElectionStage };
+  status: ResultStatus;
+  source_kind: ResultSourceKind;
+  party_reported: boolean;
+  /** The source names at least one winner. */
+  decided: boolean;
+  total_votes: number | null;
+  precincts_reporting: number | null;
+  precincts_total: number | null;
+  /** The choices marked winner, most votes first. */
+  winners: ResultChoice[];
+  /** null without votes for both places. While unofficial, the current lead. */
+  margin: ResultMargin | null;
+  /** Every choice with a result line, most votes first. */
+  choices: ResultChoice[];
+  source: { name: string; url: string; contest_name: string | null; updated_at: DateTimeString | null };
+  official_url: string | null;
+  seat_change: SeatChange | null;
+  fetched_at: DateTimeString;
+}
+
+/** One party's seats in a {@link SeatChangeCounts}. */
+export interface SeatChangeParty {
+  party: string;
+  slug: string;
+  held_going_in: number;
+  won: number;
+  /** Flipped contests won without holding a seat up going in. */
+  gained: number;
+  /** Flipped contests held going in and won no seat in. */
+  lost: number;
+  net: number;
+}
+
+/** Seat outcomes counted over a set of decided contests. Counts are contests, not seats. */
+export interface SeatChangeCounts {
+  contests: number;
+  partisan: number;
+  flipped: number;
+  flip_unknown: number;
+  outcomes: Partial<Record<SeatOutcome, number>>;
+  parties: SeatChangeParty[];
+}
+
+/** {@link SeatChangesResource.get}'s answer. */
+export interface SeatChangeSummary {
+  group_by: SeatChangeGroup | null;
+  totals: SeatChangeCounts;
+  /** null without `group_by`. */
+  groups: (SeatChangeCounts & { group: string | null })[] | null;
+}
+
+/** Filters shared by {@link ResultsResource.list} and {@link SeatChangesResource.get}. */
+export interface ResultFilterParams {
+  elections?: ListParam;
+  /** Election years, e.g. 2024. */
+  years?: number | string | readonly (number | string)[];
+  stages?: ListParam<ElectionStage>;
+  states?: ListParam<StateCode>;
+  levels?: ListParam<Level>;
+  contest_kinds?: ListParam<ContestKind>;
+  districts?: ListParam;
+  /** Office types. */
+  offices?: ListParam<ContestOfficeType>;
+  /** Office slugs. */
+  seats?: ListParam;
+  result_statuses?: ListParam<ResultStatus>;
+  source_kinds?: ListParam<ResultSourceKind>;
+  /** true: only seats that changed party; false: only partisan seats that didn't. */
+  flipped?: boolean;
+  seat_outcomes?: ListParam<SeatOutcome>;
+  /** Party slugs: seats that flipped to any of them. */
+  flipped_to?: ListParam;
+  /** Party slugs: seats that flipped away from any of them. */
+  flipped_from?: ListParam;
+  /** Contest title contains. */
+  q?: string;
+}
+
+/** Parameters for {@link ResultsResource.list}. Limit 1–200, default 50. */
+export interface ListResultsParams extends ResultFilterParams, LangParams, PageParams {
+  /** true: only results naming a winner; false: only those that don't yet. */
+  decided?: boolean;
+  /** Only results decided by at most this many percentage points. */
+  max_margin_pct?: number;
+}
+
+/** Parameters for {@link SeatChangesResource.get}. */
+export interface SeatChangesParams extends ResultFilterParams {
+  group_by?: SeatChangeGroup;
+}

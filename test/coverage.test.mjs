@@ -37,6 +37,8 @@ const CALLS = {
   listOffices: (c, q) => c.offices.list(q),
   getOffice: (c) => c.offices.get('us-house-ca-12'),
   listOfficeTerms: (c, q) => c.officeTerms.list(q),
+  listResults: (c, q) => c.results.list(q),
+  getSeatChanges: (c, q) => c.seatChanges.get(q),
   streamEvents: async (c, q) => {
     for await (const _ of c.stream.connect(q, { reconnect: false }));
   },

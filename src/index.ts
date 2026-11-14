@@ -52,6 +52,7 @@ export { CsvResource } from './resources/csv.js';
 export type { CsvPath } from './resources/csv.js';
 export { OfficeholdersResource } from './resources/officeholders.js';
 export { OfficesResource, OfficeTermsResource } from './resources/offices.js';
+export { ResultsResource, SeatChangesResource } from './resources/results.js';
 export { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 export { EndorsementStream, EventsResource, StreamResource } from './resources/stream.js';
 export type { FollowOptions, StreamMessage, StreamOptions } from './resources/stream.js';

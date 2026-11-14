@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.7.0
+
+For BallotData API 1.10.0.
+
+- `client.results.list(params)` (`GET /v1/results`): who won each contest, by how much and whether
+  the seat changed hands (`Result`, `ResultChoice`, `ResultMargin`), with filters for years, stages,
+  seats, close races (`max_margin_pct`) and seat changes (`flipped`, `seat_outcomes`, `flipped_to`,
+  `flipped_from`).
+- `client.seatChanges.get(params)` (`GET /v1/seat-changes`): seat outcomes and each party's seats
+  held, won, gained, lost and net, optionally grouped (`SeatChangeSummary`, `SeatChangeCounts`,
+  `SeatChangeParty`).
+
 ## 2.6.0
 
 For BallotData API 1.10.0.

@@ -10,6 +10,7 @@ import { EndorsersResource } from './resources/endorsers.js';
 import { IssuePositionsResource, IssuesResource } from './resources/issues.js';
 import { OfficeholdersResource } from './resources/officeholders.js';
 import { OfficesResource, OfficeTermsResource } from './resources/offices.js';
+import { ResultsResource, SeatChangesResource } from './resources/results.js';
 import { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 import { EventsResource, StreamResource } from './resources/stream.js';
 import { SubscriptionsResource } from './resources/subscriptions.js';
@@ -61,6 +62,10 @@ export class BallotData {
   readonly offices: OfficesResource;
   /** `GET /v1/office-terms`. */
   readonly officeTerms: OfficeTermsResource;
+  /** `GET /v1/results`: who won, by how much, and whether the seat changed hands. */
+  readonly results: ResultsResource;
+  /** `GET /v1/seat-changes`: seat outcomes and each party's net, counted. */
+  readonly seatChanges: SeatChangesResource;
   /** `GET /v1/stream` (Server-Sent Events). */
   readonly stream: StreamResource;
   /** `GET /v1/events` (polling). */
@@ -96,6 +101,8 @@ export class BallotData {
     this.officeholders = new OfficeholdersResource(transport);
     this.offices = new OfficesResource(transport);
     this.officeTerms = new OfficeTermsResource(transport);
+    this.results = new ResultsResource(transport);
+    this.seatChanges = new SeatChangesResource(transport);
     this.stream = new StreamResource(transport);
     this.events = new EventsResource(transport);
     this.subscriptions = new SubscriptionsResource(transport);
