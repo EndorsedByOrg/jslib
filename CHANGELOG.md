@@ -14,7 +14,7 @@ For BallotData API 1.10.0.
 
 ## 2.6.0
 
-For BallotData API 1.10.0.
+For BallotData API 1.11.0.
 
 - `client.ballot.lookup({ address })` (`POST /v1/ballot`): the districts and every contest on the
   ballot at a street address, or at `latitude` and `longitude` (`BallotLookup`, `BallotElection`,
