@@ -13,7 +13,7 @@
 
 export { BallotData } from './client.js';
 export { DEFAULT_BASE_URL, PagePromise, encodeQuery } from './core.js';
-export type { ClientOptions, Page, RequestOptions } from './core.js';
+export type { ClientOptions, CsvPage, Page, Query, RequestOptions } from './core.js';
 export {
   ApiError,
   AuthenticationError,
@@ -46,6 +46,8 @@ export { ContestsResource, MeasureTopicsResource } from './resources/contests.js
 export { ElectionsResource } from './resources/elections.js';
 export { EndorsementsResource } from './resources/endorsements.js';
 export { EndorsersResource } from './resources/endorsers.js';
+export { CsvResource } from './resources/csv.js';
+export type { CsvPath } from './resources/csv.js';
 export { OfficeholdersResource } from './resources/officeholders.js';
 export { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 export { EndorsementStream, EventsResource, StreamResource } from './resources/stream.js';

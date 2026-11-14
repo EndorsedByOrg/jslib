@@ -8,7 +8,7 @@ Every class, method, parameter and type in `ballotdata`. For a tour, start with 
 - [`PagePromise`](#pagepromise)
 - [states](#clientstates) · [coverage](#clientcoverage) · [elections](#clientelections) ·
   [contests](#clientcontests) · [endorserCategories](#clientendorsercategories) ·
-  [endorsers](#clientendorsers) · [endorsements](#clientendorsements) ·
+  [endorsers](#clientendorsers) · [csv](#clientcsv) · [endorsements](#clientendorsements) ·
   [officeholders](#clientofficeholders) · [stream](#clientstream) · [events](#clientevents) ·
   [subscriptions](#clientsubscriptions)
 - [Escape hatches: `request` and `paginate`](#escape-hatches)
@@ -191,6 +191,39 @@ Throws `NotFoundError`.
 | Parameter | Type |
 | --- | --- |
 | `lang` | `'en' \| 'es'` |
+
+### `endorsers.record(slug, params?, options?)` → `Promise<EndorserRecord>`
+
+`GET /v1/endorsers/{slug}/record`. How the choices an endorser backed did: `totals`, `by_kind`,
+`by_stage` and `elections` (newest first), each with `contests`, `picks`, `won`, `lost`, `undecided`,
+`win_rate`, `avg_vote_pct`, `incumbent_picks`, `incumbent_won`, `non_incumbent_picks` and
+`non_incumbent_won`. Only top picks count (a ranked-choice first choice, every candidate of a
+vote-for-N slate, the Yes or No on a measure). A win rate describes the endorser's picks; it doesn't
+show an endorsement changed an outcome. Throws `NotFoundError`.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `elections` | `ListParam` | Election slugs. |
+| `states` | `ListParam` | States the contests are voted in. |
+| `contest_kinds` | `ListParam` | `candidate`, `measure`, `retention`. |
+| `stages` | `ListParam` | `primary`, `general`, `runoff`. |
+| `lang` | `'en' \| 'es'` | |
+
+### `endorsers.agreement(slug, params?, options?)` → `Promise<EndorserAgreement>`
+
+`GET /v1/endorsers/{slug}/agreement`. How often other endorsers took the same side, over the contests
+both took a position in: `contests` (this endorser's) and `compared`, each with its `endorser`,
+`shared_contests`, `agreed`, `partly_agreed`, `disagreed` and `agreement_rate`, most contests in
+common first. Throws `NotFoundError`.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `with` | `ListParam` | Compare with only these endorsers (slugs). |
+| `categories` | `ListParam` | Compare with only endorsers in these categories. |
+| `elections`, `states`, `contest_kinds`, `stages` | `ListParam` | Which contests count, as for `record`. |
+| `min_shared` | `number` | Leave out endorsers with fewer contests in common. Default 3. |
+| `limit` | `number` | 1–100, default 25. |
+| `lang` | `'en' \| 'es'` | |
 
 ## `client.endorsements`
 
@@ -479,3 +512,34 @@ All exported from the package root. The main ones:
 
 Each field is documented in the type definitions (`dist/*/types.d.ts`), which editors show as you
 type. `npm run docs` builds browsable HTML of all of it.
+
+## `client.csv`
+
+Lists as CSV (`format=csv`), for spreadsheets, R and pandas. The rows are the same records the list
+methods return, paged the same way, and `params` are the matching list method's. The columns of each
+CSV are in the [data dictionaries](https://api.ballotdata.ai/docs/dictionary#csv).
+
+`path` is one of `/v1/elections`, `/v1/coverage`, `/v1/contests`, `/v1/endorsers`,
+`/v1/endorsements`, `/v1/candidates`, `/v1/issue-positions`, `/v1/officeholders`,
+`/v1/endorsers/{slug}/record` or `/v1/endorsers/{slug}/agreement`.
+
+### `csv.page(path, params?, options?)` → `Promise<CsvPage>`
+
+One page: `{ text, nextCursor }`. Pass `nextCursor` as `cursor` for the next page; it is `null` on the
+last.
+
+### `csv.pages(path, params?, options?)` → `AsyncGenerator<CsvPage>`
+
+Every page, one after another.
+
+### `csv.all(path, params?, options?)` → `Promise<string>`
+
+Every page joined into one CSV with the header once. Each page is a request, so filter by election
+or state before reading a long list.
+
+```ts
+import { writeFile } from 'node:fs/promises';
+
+const csv = await client.csv.all('/v1/endorsements', { elections: 'ca-2026-11-03-general' });
+await writeFile('endorsements.csv', csv);
+```

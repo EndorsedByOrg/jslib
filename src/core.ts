@@ -56,13 +56,21 @@ export interface Page<T> {
   next_cursor: string | null;
 }
 
+/** One page of a list as CSV, from {@link CsvResource}. */
+export interface CsvPage {
+  /** The CSV: a header line, then the rows, lines ending CRLF. */
+  text: string;
+  /** Pass as `cursor` for the next page; null on the last page. */
+  nextCursor: string | null;
+}
+
 export const DEFAULT_BASE_URL = 'https://api.ballotdata.ai';
 const DEFAULT_TIMEOUT = 30_000;
 const DEFAULT_MAX_RETRIES = 2;
 /** Don't sleep longer than this on a Retry-After; a daily limit can ask for hours. */
 const MAX_RETRY_AFTER_SECONDS = 60;
 
-type Query = Record<string, unknown>;
+export type Query = Record<string, unknown>;
 
 function env(name: string): string | undefined {
   const g = globalThis as { process?: { env?: Record<string, string | undefined> } };
@@ -145,8 +153,12 @@ export interface TransportRequest {
   body?: unknown;
   /** Extra headers. */
   headers?: Record<string, string>;
-  /** `text` returns the body as a string (CSV) instead of parsing JSON. */
-  responseType?: 'json' | 'text';
+  /**
+   * `text` returns the body as a string (CSV) instead of parsing JSON; `csv`
+   * returns a {@link CsvPage}: the text and the next page's cursor from the
+   * `X-Next-Cursor` header.
+   */
+  responseType?: 'json' | 'text' | 'csv';
   options?: RequestOptions;
 }
 
@@ -284,7 +296,15 @@ export class Transport {
                 value:
                   res.status === 204
                     ? (undefined as T)
-                    : await this.#read(() => (responseType === 'text' ? res.text() : res.json()) as Promise<T>, options.signal),
+                    : await this.#read(
+                        () =>
+                          (responseType === 'csv'
+                            ? res.text().then((text) => ({ text, nextCursor: res.headers.get('x-next-cursor') }))
+                            : responseType === 'text'
+                              ? res.text()
+                              : res.json()) as Promise<T>,
+                        options.signal,
+                      ),
               }
             : { ok: false, error: await errorFromResponse(res) };
         } finally {

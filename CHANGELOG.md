@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.0
+
+For BallotData API 1.7.0.
+
+- `client.endorsers.record(slug)`: an endorser's track record (`EndorserRecord`, `RecordTally`):
+  contests, picks, won, lost, undecided, win rate and average vote share, in total and by contest
+  kind, election stage and election.
+- `client.endorsers.agreement(slug)`: how often other endorsers took the same side
+  (`EndorserAgreement`, `AgreementRow`), with `with`, `categories` and `min_shared`.
+- `client.csv`: the lists as CSV (`format=csv`). `csv.page()` gives one page and its cursor,
+  `csv.pages()` walks them, and `csv.all()` joins them into one CSV. New types `CsvPage`, `CsvPath`
+  and `Query`.
+
 ## 2.2.0
 
 For BallotData API 1.6.0.

@@ -19,6 +19,8 @@ const CALLS = {
   listEndorserCategories: (c, q) => c.endorserCategories.list(q),
   listEndorsers: (c, q) => c.endorsers.list(q),
   getEndorser: (c, q) => c.endorsers.get('sf-labor-council', q),
+  getEndorserRecord: (c, q) => c.endorsers.record('sf-labor-council', q),
+  getEndorserAgreement: (c, q) => c.endorsers.agreement('sf-labor-council', q),
   listEndorsements: (c, q) => c.endorsements.list(q),
   getEndorsement: (c, q) => c.endorsements.get(90211, q),
   getEndorsementHistory: (c) => c.endorsements.history(90211),
@@ -76,6 +78,9 @@ for (const { path, method, op } of operations) {
     const query = Object.fromEntries(params.map((p) => [p.name, p.example ?? (p.schema?.type === 'boolean' ? true : p.schema?.type === 'integer' ? 5 : 'x')]));
     // The stream starts from a cursor or from/since, not both; the client sends a cursor as Last-Event-ID.
     if (op.operationId === 'streamEvents' || op.operationId === 'pollEvents') delete query.subscription;
+    // format=csv on the lists goes through client.csv (checked below); the JSON methods don't take it.
+    const csv = 'format' in query && op.operationId !== 'exportElection';
+    if (csv) delete query.format;
     const before = requests.length;
     await CALLS[op.operationId](client, query);
     const req = requests[before];
@@ -88,7 +93,15 @@ for (const { path, method, op } of operations) {
         assert.equal(req.headers['last-event-id'], String(query.cursor));
         continue;
       }
+      if (csv && p.name === 'format') continue;
       assert.ok(req.query.has(p.name), `${p.name} was not sent`);
+    }
+    if (csv) {
+      const at = requests.length;
+      await client.csv.page(path.replace(/\{[^}]+\}/g, 'sf-labor-council'), query);
+      const sent = requests[at];
+      assert.equal(sent.query.get('format'), 'csv');
+      for (const p of params) assert.ok(sent.query.has(p.name), `csv: ${p.name} was not sent`);
     }
   });
 }
