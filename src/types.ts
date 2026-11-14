@@ -2128,3 +2128,97 @@ export interface ElectionExport {
   /** Every contest you can read, in ballot order: races from federal down, then measures. */
   contests: ExportContest[];
 }
+
+// ---------------------------------------------------------------- ballot lookup (API 1.10.0)
+
+/** What `client.ballot.lookup()` looks up: an address, or a point. */
+export interface BallotLookupInput {
+  /** A street address with a house number, on one line, with the city and state or ZIP code. */
+  address?: string;
+  /** Latitude, with `longitude`, instead of an address. */
+  latitude?: number;
+  longitude?: number;
+  /** Only these elections (slugs). Leave out for every election from 60 days ago on. */
+  elections?: string[];
+  /** In a partisan primary, only this party's contests (and the nonpartisan ones). */
+  party?: string;
+  lang?: Lang;
+}
+
+/** A district the address is in, on today's lines. */
+export interface BallotDistrict {
+  /** District id: a contest's `district_id`. */
+  id: number;
+  ocd_id: string | null;
+  name: string;
+  level: Level;
+  /** statewide, congressional, state_upper, state_lower, county, council, school, … */
+  type: string;
+  state: StateCode | null;
+}
+
+/** A line on the ballot, in brief. */
+export interface BallotChoice {
+  /** The `choice_id` endorsements refer to. */
+  id: number;
+  /** As printed. */
+  label: string;
+  measure_answer: MeasureAnswer | null;
+  /** The party as printed beside the name; null where none is printed. */
+  party: string | null;
+  ballot_designation: string | null;
+  /** Holds the seat now: true or false where known, null where not (and for a measure answer). */
+  incumbent: boolean | null;
+  withdrawn: boolean;
+  /** `client.candidates.get(id)`; null for a measure answer. */
+  candidate_id: number | null;
+  /** Endorsers who endorsed this choice. */
+  endorsement_count: number;
+  /** true for a winner, false for a loser, null with no result yet or none stated. */
+  winner: boolean | null;
+}
+
+/** A contest on the ballot, in brief: `client.contests.get(id)` has it in full. */
+export interface BallotContest {
+  id: number;
+  /** As printed. */
+  title: string;
+  short_title: string | null;
+  kind: ContestKind;
+  vote_method: VoteMethod;
+  votes_allowed: number | null;
+  ranks_allowed: number | null;
+  measure_code: string | null;
+  office: ContestOffice | null;
+  race_type: RaceType | null;
+  partisan: boolean | null;
+  /** For a party primary, the party. */
+  party: Party | null;
+  unopposed: boolean;
+  /** One of the lookup's `districts[].id`. */
+  district_id: number;
+  /** Endorsers who took a position in this contest. */
+  endorsement_count: number;
+  result_status: ResultStatus | null;
+  /** In ballot order. */
+  choices: BallotChoice[];
+}
+
+/** One election on the ballot at the address. */
+export interface BallotElection {
+  election: Election;
+  /** In ballot order: federal, state, then local offices, then measures. */
+  contests: BallotContest[];
+  /** Contests in a state or election the account hasn't bought: counted, not shown. */
+  contests_outside_purchase: number;
+}
+
+/** The ballot at an address, from `client.ballot.lookup()`. */
+export interface BallotLookup {
+  state: StateCode | null;
+  /** The address as the Census Bureau matched it; null for a point. */
+  matched_address: string | null;
+  districts: BallotDistrict[];
+  /** Earliest first; empty when there are no contests at the address. */
+  elections: BallotElection[];
+}

@@ -16,6 +16,7 @@ const CALLS = {
   getCoverage: (c, q) => c.coverage.list(q),
   listContests: (c, q) => c.contests.list(q),
   getContest: (c, q) => c.contests.get(4410, q),
+  lookupBallot: (c) => c.ballot.lookup({ address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' }),
   listEndorserCategories: (c, q) => c.endorserCategories.list(q),
   listEndorsers: (c, q) => c.endorsers.list(q),
   getEndorser: (c, q) => c.endorsers.get('sf-labor-council', q),

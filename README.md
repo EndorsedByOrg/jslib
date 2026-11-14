@@ -93,6 +93,7 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.elections.export(slug, { format, lang })` | `GET /v1/elections/{slug}/export` | `ElectionExport`, or CSV text with `format: 'csv'` |
 | `client.contests.list(params)` | `GET /v1/contests` | pages of `Contest` |
 | `client.contests.get(id, params)` | `GET /v1/contests/{id}` | `ContestDetail` (with every endorser's position) |
+| `client.ballot.lookup({ address })` | `POST /v1/ballot` | `BallotLookup`: the districts and contests at a street address |
 | `client.endorserCategories.list({ lang })` | `GET /v1/endorser-categories` | `EndorserCategory[]` |
 | `client.endorsers.list(params)` | `GET /v1/endorsers` | pages of `Endorser` |
 | `client.endorsers.get(slug, { lang })` | `GET /v1/endorsers/{slug}` | `EndorserDetail` |
@@ -180,6 +181,20 @@ const contest = await client.contests.get(4410, { categories: ['labor', 'editori
 for (const { endorser, picks } of contest.endorsements) {
   const marks = picks.map((p) => (p.rank ? `${p.rank}. ${p.label}` : p.label)).join('  ');
   console.log(`${endorser.name}: ${marks}`);
+}
+```
+
+### The ballot at an address
+
+`client.ballot.lookup()` takes a street address (or `latitude` and `longitude`) and returns the
+districts it is in and every contest on its ballot, by election and in ballot order. The address is
+sent in the request body, found with the U.S. Census Bureau's geocoder and never stored.
+
+```js
+const ballot = await client.ballot.lookup({ address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' });
+for (const { election, contests } of ballot.elections) {
+  console.log(election.name);
+  for (const c of contests) console.log(`  ${c.title}: ${c.choices.map((x) => x.label).join(', ')}`);
 }
 ```
 

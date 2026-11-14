@@ -1,4 +1,5 @@
 import { Transport, type ClientOptions, type PagePromise, type RequestOptions } from './core.js';
+import { BallotResource } from './resources/ballot.js';
 import { CandidatesResource } from './resources/candidates.js';
 import { ChangesResource } from './resources/changes.js';
 import { ContestsResource, MeasureTopicsResource } from './resources/contests.js';
@@ -36,6 +37,8 @@ export class BallotData {
   readonly elections: ElectionsResource;
   /** `GET /v1/contests`, `GET /v1/contests/{id}`. */
   readonly contests: ContestsResource;
+  /** `POST /v1/ballot`: the ballot at a street address. */
+  readonly ballot: BallotResource;
   /** `GET /v1/endorser-categories`. */
   readonly endorserCategories: EndorserCategoriesResource;
   /** `GET /v1/endorsers`, `GET /v1/endorsers/{slug}`. */
@@ -81,6 +84,7 @@ export class BallotData {
     this.coverage = new CoverageResource(transport);
     this.elections = new ElectionsResource(transport);
     this.contests = new ContestsResource(transport);
+    this.ballot = new BallotResource(transport);
     this.endorserCategories = new EndorserCategoriesResource(transport);
     this.endorsers = new EndorsersResource(transport);
     this.endorsements = new EndorsementsResource(transport);
