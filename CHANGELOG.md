@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.5.0
+
+For BallotData API 1.9.0.
+
+- `client.offices.list()` and `client.offices.get(slug)`: seats that last across elections and
+  redistricting (`OfficeRecord`, `OfficeDetail`, `OfficeDistrict`, `CurrentHolder`), with every
+  term and every contest for the seat.
+- `client.officeTerms.list()`: who held which seat since 2020 (`OfficeTerm`), with `on`, `since`,
+  `person`, `offices` and `hows`.
+- `seat` (`ContestSeat`) on contests and `seat_change` (`SeatChange`) on `ContestResult` and
+  `ContestResultBrief`: incumbent re-elected, defeated or open seat, and whether a partisan seat
+  flipped.
+- `client.csv` takes `/v1/offices` and `/v1/office-terms`.
+- New value types `OfficeRecordLevel`, `TermHow`, `TermEndReason`, `TermDatesBasis`,
+  `TermSourceKind` and `SeatOutcome`.
+
 ## 2.4.0
 
 For BallotData API 1.8.0.

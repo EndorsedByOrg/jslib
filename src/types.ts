@@ -424,7 +424,7 @@ export type ChangeType = 'created' | 'updated' | 'deleted';
  *   again with from=earliest, and catch up with GET /v1/changes.
  * - `warming_up`: The stream is still loading on this server. Try again in a few seconds.
  * - `server_busy`: This server has too many open streams. Try again.
- * - `not_available`: This data isn’t loaded yet (officeholders, for example). Try again later.
+ * - `not_available`: This data isn’t loaded yet (officeholders or offices, for example). Try again later.
  * - `internal_error`: Something went wrong on our side. Quote request_id when you write to us.
  *
  * Every value and its meaning: https://api.ballotdata.ai/docs/values#error-code
@@ -665,6 +665,8 @@ export interface ContestResult {
   notes: string | null;
   /** Registered voters and ballots cast in the jurisdiction; null where none (API 1.8.0). */
   turnout: Turnout | null;
+  /** Whether the incumbent kept the seat and whether a partisan seat flipped; null until decided and linked (API 1.9.0). */
+  seat_change: SeatChange | null;
   /** When BallotData last read it from the source. */
   fetched_at: string;
 }
@@ -676,6 +678,8 @@ export interface ContestResultBrief {
   party_reported: boolean;
   total_votes: number | null;
   source_url: string;
+  /** Whether the incumbent kept the seat and whether a partisan seat flipped (API 1.9.0). */
+  seat_change: SeatChange | null;
 }
 
 // ------------------------------------------------------------ research data
@@ -1052,6 +1056,8 @@ export interface ContestBase {
   source_url: string | null;
   /** The office a candidate or retention contest fills; null for a measure. */
   office: ContestOffice | null;
+  /** The durable seat this contest fills (`client.offices.get(seat.slug)`); null for a measure or a contest not linked yet (API 1.9.0). */
+  seat: ContestSeat | null;
   /** regular, special (rest of an unexpired term), recall or retention; null for a measure. */
   race_type: RaceType | null;
   /** Candidates run with a party label; null for a measure or retention question. */
@@ -1389,6 +1395,194 @@ export interface OfficeholderDetail extends Officeholder {
   seats: Officeholder[];
 }
 
+// ------------------------------------------------------------------ offices
+// API 1.9.0: seats that last across elections and redistricting, who held
+// each since 2020, and whether each result changed hands.
+
+/**
+ * Level of a durable office.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#office-record-level
+ */
+export type OfficeRecordLevel = 'federal' | 'state' | 'local';
+
+/**
+ * How a term began.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#term-how
+ */
+export type TermHow = 'elected' | 'special_election' | 'appointed' | 'succeeded' | 'retained' | 'holdover' | 'other';
+
+/**
+ * How a term ended.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#term-end-reason
+ */
+export type TermEndReason =
+  | 'term_ended'
+  | 'resigned'
+  | 'died'
+  | 'removed'
+  | 'recalled'
+  | 'appointed_elsewhere'
+  | 'elected_elsewhere'
+  | 'succeeded_elsewhere'
+  | 'seat_abolished'
+  | 'other';
+
+/** Where a term's dates come from: the source, the law, or the next holder's start. */
+export type TermDatesBasis = 'sourced' | 'statutory' | 'next_holder';
+
+/** Where a term comes from: our certified results, an official record, or an openly licensed dataset. */
+export type TermSourceKind = 'results' | 'official' | 'dataset';
+
+/**
+ * Whether the holder going in kept the seat.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#seat-outcome
+ */
+export type SeatOutcome =
+  | 'incumbent_reelected'
+  | 'incumbent_defeated'
+  | 'open_seat'
+  | 'new_seat'
+  | 'unknown'
+  | 'incumbents_reelected'
+  | 'mixed';
+
+/** The durable seat a contest fills. */
+export interface ContestSeat {
+  /** The seat's slug, for `client.offices.get()`. */
+  slug: string;
+  name: string;
+  race_type: RaceType;
+  /** A primary nominates and never gives a term. */
+  stage: 'general' | 'primary' | 'runoff';
+  /** Members this contest elects (1 except for an at-large body). */
+  seats_up: number;
+}
+
+/** Whether a result kept or changed who holds the seat. */
+export interface SeatChange {
+  /** The seat's slug. */
+  office: string;
+  outcome: SeatOutcome;
+  partisan: boolean;
+  /** Partisan seats: the winner's party differs from the holder's going in. null for nonpartisan seats or an unknown party. */
+  flipped: boolean | null;
+  /** Who held the seat (or the seats up) on election day. */
+  holders_going_in: { name: string; party: string | null; how: TermHow; start_date: DateString | null }[];
+  parties_going_in: string[];
+  winner_parties: string[];
+  incumbents_up: number;
+  incumbents_reelected: number;
+  incumbents_defeated: number;
+  open_seats: number;
+  /** The day the seat fell vacant, when it was vacant on election day. */
+  vacant_since: DateString | null;
+}
+
+/** One version of a seat's district. */
+export interface OfficeDistrict {
+  /** "…/plan:2020" for lines used before 2022 redistricting. */
+  ocd_id: string;
+  /** The contest {@link District} id, where there is one. */
+  district_id: number | null;
+  /** "2020", or null for current lines. */
+  plan: string | null;
+  valid_from: DateString | null;
+  valid_to: DateString | null;
+}
+
+/** Who holds a seat now. */
+export interface CurrentHolder {
+  name: string;
+  /** The same for one person across all their terms. */
+  person_key: string;
+  party: string | null;
+  how: TermHow;
+  start_date: DateString | null;
+  scheduled_end_date: DateString | null;
+}
+
+/** A seat (or an at-large body) that lasts across elections. */
+export interface OfficeRecord {
+  /** Permanent id: the same across elections and redistricting. */
+  slug: string;
+  name: string;
+  office_type: ContestOfficeType;
+  level: OfficeRecordLevel;
+  branch: OfficeBranch | null;
+  state: StateCode | null;
+  /** The division the seat belongs to, without a redistricting plan. */
+  jurisdiction_ocd_id: string;
+  /** "Class 3", "Position 8", "Department 12". */
+  seat_label: string | null;
+  /** 1, or the size of an at-large body. */
+  seats: number;
+  term_years: number | null;
+  partisan: boolean | null;
+  established_on: DateString | null;
+  abolished_on: DateString | null;
+  /** The seat that replaced it. */
+  successor: string | null;
+  /** Every version of the seat's district, oldest first. */
+  districts: OfficeDistrict[];
+  /** Who holds it now; empty while vacant or not known. */
+  current_holders: CurrentHolder[];
+  updated_at: DateTimeString;
+}
+
+/** One person's term in one seat. */
+export interface OfficeTerm {
+  id: number;
+  /** The seat's slug. */
+  office: string;
+  office_name: string;
+  state: StateCode | null;
+  name: string;
+  /** The same for one person across all their terms: `bioguide:<id>`, `ocd-person/<uuid>` or `name:<st>:<family>-<given>`. */
+  person_key: string;
+  candidate_id: number | null;
+  bioguide_id: string | null;
+  openstates_person_id: string | null;
+  party: string | null;
+  party_changes: { on: DateString; party_slug: string }[];
+  how: TermHow;
+  start_date: DateString | null;
+  /** null while serving or not known. */
+  end_date: DateString | null;
+  scheduled_end_date: DateString | null;
+  end_reason: TermEndReason | null;
+  dates_basis: TermDatesBasis | null;
+  election_date: DateString | null;
+  /** The contest that gave the term. */
+  contest_id: number | null;
+  district_ocd_id: string | null;
+  district_id: number | null;
+  source: { kind: TermSourceKind; name: string; url: string; license: string | null; retrieved_on: DateString | null };
+  updated_at: DateTimeString;
+}
+
+/** One seat with every term and contest, from {@link OfficesResource.get}. */
+export interface OfficeDetail extends OfficeRecord {
+  /** Every term, oldest first. */
+  terms: OfficeTerm[];
+  /** Every contest for the seat, oldest first. */
+  contests: {
+    id: number;
+    title: string;
+    /** Election slug. */
+    election: string;
+    election_date: DateString;
+    race_type: RaceType;
+    stage: 'general' | 'primary' | 'runoff';
+    seats_up: number;
+    result_status: ResultStatus | null;
+    seat_change: SeatChange | null;
+  }[];
+}
+
 // ------------------------------------------------------------------ stream
 
 /**
@@ -1672,6 +1866,33 @@ export interface ListOfficeholdersParams extends LangParams, PageParams {
   /** OCD division ids of the seats. */
   districts?: ListParam;
   /** Name contains. */
+  q?: string;
+}
+
+export interface ListOfficesParams extends PageParams {
+  states?: ListParam<StateCode>;
+  levels?: ListParam<OfficeRecordLevel>;
+  office_types?: ListParam<ContestOfficeType>;
+  /** OCD division ids: seats elected on any of them, under any plan. */
+  districts?: ListParam;
+  /** Name contains. */
+  q?: string;
+}
+
+export interface ListOfficeTermsParams extends PageParams {
+  states?: ListParam<StateCode>;
+  levels?: ListParam<OfficeRecordLevel>;
+  office_types?: ListParam<ContestOfficeType>;
+  /** Office slugs. */
+  offices?: ListParam;
+  /** Only terms in office on this day. */
+  on?: DateString;
+  /** Only terms that ended on or after this day, or are still going. */
+  since?: DateString;
+  /** One person's terms, by `person_key`. */
+  person?: string;
+  hows?: ListParam<TermHow>;
+  /** Holder's name contains. */
   q?: string;
 }
 

@@ -14,6 +14,8 @@ export type CsvPath =
   | '/v1/candidates'
   | '/v1/issue-positions'
   | '/v1/officeholders'
+  | '/v1/offices'
+  | '/v1/office-terms'
   | `/v1/endorsers/${string}/record`
   | `/v1/endorsers/${string}/agreement`;
 

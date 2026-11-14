@@ -109,6 +109,9 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.issuePositions.list(params)` | `GET /v1/issue-positions` | pages of `IssuePositionItem` |
 | `client.officeholders.list(params)` | `GET /v1/officeholders` | pages of `Officeholder` |
 | `client.officeholders.get(personId, { lang })` | `GET /v1/officeholders/{id}` | `OfficeholderDetail` |
+| `client.offices.list(params)` | `GET /v1/offices` | pages of `OfficeRecord` (seats that last across elections) |
+| `client.offices.get(slug)` | `GET /v1/offices/{slug}` | `OfficeDetail` (every term and contest, with seat flips) |
+| `client.officeTerms.list(params)` | `GET /v1/office-terms` | pages of `OfficeTerm` (holders since 2020) |
 | `client.stream.connect(params, options)` | `GET /v1/stream` | a live `EndorsementStream` |
 | `client.events.list(params)` | `GET /v1/events` | `EventsPage` |
 | `client.events.follow(params, options)` | `GET /v1/events` (long polling) | changes, forever |

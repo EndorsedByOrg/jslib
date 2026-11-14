@@ -33,6 +33,9 @@ const CALLS = {
   exportElection: (c, q) => c.elections.export('ca-2026-11-03-general', q),
   listOfficeholders: (c, q) => c.officeholders.list(q),
   getOfficeholder: (c, q) => c.officeholders.get('4f6a2c1e-8b3d-4e5f-9a7b-1c2d3e4f5a6b', q),
+  listOffices: (c, q) => c.offices.list(q),
+  getOffice: (c) => c.offices.get('us-house-ca-12'),
+  listOfficeTerms: (c, q) => c.officeTerms.list(q),
   streamEvents: async (c, q) => {
     for await (const _ of c.stream.connect(q, { reconnect: false }));
   },

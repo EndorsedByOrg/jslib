@@ -105,6 +105,9 @@ export async function startFakeApi({ rateLimitFirst = 0, failFirst = 0 } = {}) {
     if (p === '/v1/officeholders') return send(200, { data: [{ person_id: 'p-1', name: 'Alex Morgan', office: 'state_representative', state: 'CA' }], next_cursor: null });
     if (p === '/v1/officeholders/p-1') return send(200, { data: { person_id: 'p-1', name: 'Alex Morgan', seats: [] } });
     if (p === '/v1/officeholders/missing') return error(404, 'not_found', 'No officeholder has that id.');
+    if (p === '/v1/offices') return send(200, { data: [{ slug: 'us-house-ca-12', name: 'U.S. Representative, California District 12', seats: 1 }], next_cursor: null });
+    if (p === '/v1/offices/us-house-ca-12') return send(200, { data: { slug: 'us-house-ca-12', terms: [{ name: 'Alex Morgan', how: 'elected' }], contests: [{ id: 4120, seat_change: { outcome: 'open_seat', flipped: false } }] } });
+    if (p === '/v1/office-terms') return send(200, { data: [{ id: 903, office: 'us-house-ca-12', name: 'Alex Morgan', how: 'elected' }], next_cursor: null });
     if (p === '/v1/busy' && req.method === 'POST') return error(503, 'warming_up', 'Warming up.', { 'Retry-After': '0' });
     if (p === '/v1/elections') return send(200, { data: [{ ...election, contest_count: 2, endorsement_count: 4 }], next_cursor: null });
     if (p === '/v1/endorser-categories') return send(200, { data: [{ slug: 'labor', name: 'Labor', singular_name: 'Labor union', endorser_count: 1 }] });
