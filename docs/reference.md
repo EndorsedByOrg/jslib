@@ -9,7 +9,7 @@ Every class, method, parameter and type in `ballotdata`. For a tour, start with 
 - [states](#clientstates) · [coverage](#clientcoverage) · [elections](#clientelections) ·
   [contests](#clientcontests) · [endorserCategories](#clientendorsercategories) ·
   [endorsers](#clientendorsers) · [csv](#clientcsv) · [endorsements](#clientendorsements) ·
-  [officeholders](#clientofficeholders) · [offices](#clientoffices) · [officeTerms](#clientofficeterms) · [stream](#clientstream) · [events](#clientevents) ·
+  [officeholders](#clientofficeholders) · [offices](#clientoffices) · [officeTerms](#clientofficeterms) · [results](#clientresults) · [seatChanges](#clientseatchanges) · [stream](#clientstream) · [events](#clientevents) ·
   [subscriptions](#clientsubscriptions)
 - [Escape hatches: `request` and `paginate`](#escape-hatches)
 - [Postbacks](#postbacks)
@@ -438,6 +438,52 @@ for (const c of seat.contests) {
   if (c.seat_change) console.log(c.election_date, c.seat_change.outcome, c.seat_change.flipped);
 }
 const { data: inOffice } = await client.officeTerms.list({ states: 'CA', on: '2021-06-01' });
+```
+
+## `client.results`
+
+### `results.list(params?, options?)` → `PagePromise<Result>`
+
+`GET /v1/results` (API 1.10.0). One compact row per contest with a result: `winners`, every
+choice's votes (`choices`, most votes first), the deciding `margin` (votes and percentage points
+between the last winning place and the next), `status`, `source_kind`, `source` and `seat_change`.
+
+| Parameter | Type | |
+| --- | --- | --- |
+| `elections`, `states`, `levels`, `contest_kinds`, `districts` | | As on `contests.list`. |
+| `years` | `number \| string \| (number \| string)[]` | Election years. |
+| `stages` | `ListParam<ElectionStage>` | general, primary or runoff. |
+| `offices` | `ListParam<ContestOfficeType>` | Office types. |
+| `seats` | `ListParam` | Office slugs. |
+| `result_statuses` | `ListParam<ResultStatus>` | |
+| `source_kinds` | `ListParam<ResultSourceKind>` | official, compiled or party. |
+| `decided` | `boolean` | Only results that name a winner (or, false, that don't yet). |
+| `max_margin_pct` | `number` | Close races: margin at most this many points. |
+| `flipped` | `boolean` | Only seats that changed party (or, false, partisan seats that didn't). |
+| `seat_outcomes` | `ListParam<SeatOutcome>` | |
+| `flipped_to`, `flipped_from` | `ListParam` | Party slugs: one party's gains or losses. |
+| `q` | `string` | Contest title contains. |
+| `lang` | `'en' \| 'es'` | |
+| `limit` | `number` | 1–200, default 50. |
+| `cursor` | `string` | |
+
+```ts
+const { data: flips } = await client.results.list({ years: 2024, offices: 'us_representative', flipped: true });
+for (const r of flips) console.log(r.title, r.winners[0]?.label, r.margin?.pct_points, r.seat_change?.parties_going_in);
+```
+
+## `client.seatChanges`
+
+### `seatChanges.get(params?, options?)` → `Promise<SeatChangeSummary>`
+
+`GET /v1/seat-changes` (API 1.10.0). Seat outcomes over decided contests: incumbents re-elected
+and defeated, open seats, flips, and each party's seats `held_going_in`, `won`, `gained`, `lost` and
+`net`. Takes the filters of `results.list` (not `decided`, `max_margin_pct`, `lang` or paging) plus
+`group_by` (`state`, `office_type`, `election` or `stage`). Counts are contests, so a vote-for-N
+contest counts once for each party in it.
+
+```ts
+const { totals, groups } = await client.seatChanges.get({ years: 2024, offices: 'us_representative', group_by: 'state' });
 ```
 
 ## `client.stream`

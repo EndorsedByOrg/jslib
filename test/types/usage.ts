@@ -86,6 +86,13 @@ async function usage(): Promise<void> {
   const historical: boolean | undefined = (await client.elections.list()).data[0]?.details.historical;
   void [kindOfSource, votes, won, historical, result?.source.url];
 
+  const flips = await client.results.list({ years: 2024, offices: 'us_representative', flipped: true, max_margin_pct: 5 });
+  const margin: number | undefined = flips.data[0]?.margin?.pct_points;
+  const flippedFrom: string[] | undefined = flips.data[0]?.seat_change?.parties_going_in;
+  const seatCounts = await client.seatChanges.get({ years: [2024], group_by: 'state' });
+  const net: number | undefined = seatCounts.totals.parties[0]?.net;
+  void [margin, flippedFrom, net];
+
   const postback = await constructPostback('{}', 't=1,v1=00', 'secret');
   postback.changes.map((c) => c.type);
 

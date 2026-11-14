@@ -103,6 +103,8 @@ test('every endpoint is reachable', async () => {
   assert.equal((await client.offices.list({ states: 'CA' })).data[0].slug, 'us-house-ca-12');
   assert.equal((await client.offices.get('us-house-ca-12')).contests[0].seat_change.outcome, 'open_seat');
   assert.equal((await client.officeTerms.list({ on: '2021-06-01' })).data[0].how, 'elected');
+  assert.equal((await client.results.list({ years: 2024, flipped: true })).data[0].margin.votes, 694);
+  assert.equal((await client.seatChanges.get({ years: [2024] })).totals.flipped, 3);
   assert.equal((await client.events.list({ cursor: 'c0' })).data.length, 3);
 });
 
