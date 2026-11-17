@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.8.0
+
+For BallotData API 1.13.0.
+
+- Contests (`Contest`, `BallotContest`, `Result`) gain `on_ballot` and `off_ballot_reason`
+  (`OffBallotReason`: `unopposed` or `cancelled`). The API now lists races a state or county leaves
+  off the printed ballot, usually unopposed ones whose candidates were declared elected.
+- `client.contests.list({ on_ballot: true })` and `client.ballot.lookup({ address, on_ballot: true })`
+  keep only the contests printed on the ballot.
+
 ## 2.7.0
 
 For BallotData API 1.10.0.

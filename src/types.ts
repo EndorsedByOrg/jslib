@@ -144,6 +144,18 @@ export type EndorsementStage = 'general' | 'primary' | 'runoff';
 export type RaceType = 'regular' | 'special' | 'recall' | 'retention';
 
 /**
+ * Why a contest is not printed on the ballot (`on_ballot` is false).
+ *
+ * - `unopposed`: No more candidates filed than seats, so the state or county left the race off the ballot
+ *   and declared them elected.
+ * - `cancelled`: Left off the ballot for another reason: nobody filed, the seat was filled by appointment,
+ *   or the election was called off.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#off-ballot-reason
+ */
+export type OffBallotReason = 'unopposed' | 'cancelled';
+
+/**
  * The office a contest fills, normalized across states.
  *
  * - `president`: President of the United States (with the vice president on the same ticket).
@@ -1047,6 +1059,13 @@ export interface ContestBase {
   full_text_url: string | null;
   /** A candidate contest with no more candidates still running than seats. Always false for measures. */
   unopposed: boolean;
+  /**
+   * Printed on the ballot. false for a race the state or county left off (usually unopposed, the
+   * candidates declared elected); `off_ballot_reason` says why.
+   */
+  on_ballot: boolean;
+  /** Why the contest is not on the ballot; null when `on_ballot` is true. */
+  off_ballot_reason: OffBallotReason | null;
   /** Position on the printed ballot. */
   ballot_order: number | null;
   /** For a party primary, the party. */
@@ -1743,6 +1762,8 @@ export interface ListContestsParams extends LangParams, PageParams {
   upcoming?: boolean;
   /** true: only contests with a result; false: only those without one yet. */
   has_result?: boolean;
+  /** true: only contests printed on the ballot; false: only races left off it. Leave out for both. */
+  on_ballot?: boolean;
   /** Only contests whose result has one of these statuses. */
   result_statuses?: ListParam<ResultStatus>;
 }
@@ -2142,6 +2163,8 @@ export interface BallotLookupInput {
   elections?: string[];
   /** In a partisan primary, only this party's contests (and the nonpartisan ones). */
   party?: string;
+  /** true: only contests printed on the ballot (what the voter sees); false: only races left off it. Leave out for both. */
+  on_ballot?: boolean;
   lang?: Lang;
 }
 
@@ -2195,6 +2218,13 @@ export interface BallotContest {
   /** For a party primary, the party. */
   party: Party | null;
   unopposed: boolean;
+  /**
+   * Printed on the ballot. false for a race the state or county left off (usually unopposed, the
+   * candidates declared elected); `off_ballot_reason` says why.
+   */
+  on_ballot: boolean;
+  /** Why the contest is not on the ballot; null when `on_ballot` is true. */
+  off_ballot_reason: OffBallotReason | null;
   /** One of the lookup's `districts[].id`. */
   district_id: number;
   /** Endorsers who took a position in this contest. */
@@ -2279,6 +2309,13 @@ export interface Result {
   race_type: RaceType | null;
   partisan: boolean | null;
   unopposed: boolean;
+  /**
+   * Printed on the ballot. false for a race the state or county left off (usually unopposed, the
+   * candidates declared elected); `off_ballot_reason` says why.
+   */
+  on_ballot: boolean;
+  /** Why the contest is not on the ballot; null when `on_ballot` is true. */
+  off_ballot_reason: OffBallotReason | null;
   district: { id: number; ocd_id: string | null; name: string; level: Level; type: string; state: StateCode | null };
   election: { slug: string; name: string; date: DateString; type: ElectionType; stage: ElectionStage };
   status: ResultStatus;
