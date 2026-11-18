@@ -144,6 +144,43 @@ export type EndorsementStage = 'general' | 'primary' | 'runoff';
 export type RaceType = 'regular' | 'special' | 'recall' | 'retention';
 
 /**
+ * A printed candidate's status in a contest (API 1.14.0).
+ *
+ * - `on_ballot`: Printed; no result yet, or the result names no winner.
+ * - `withdrew_still_on_ballot`: Withdrew after the ballot was printed (`withdrawn` is true).
+ * - `advanced`: Won this primary stage and goes on to the next one.
+ * - `won`: Won the race (a general, special, runoff or consolidated election).
+ * - `lost`: The certified result names winners and this candidate isn't one.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#choice-status
+ */
+export type ChoiceStatus = 'on_ballot' | 'withdrew_still_on_ballot' | 'advanced' | 'won' | 'lost';
+
+/**
+ * Where a candidacy that isn't a printed line stands (API 1.14.0).
+ *
+ * - `declared`: Announced or filed, but hasn't qualified for the ballot (yet).
+ * - `withdrew`: Withdrew before the ballot was printed, so the name isn't on it.
+ * - `disqualified`: Removed by an election office or a court.
+ * - `qualified`: A write-in candidate whose write-in votes will be counted by name.
+ *
+ * Every value and its meaning: https://api.ballotdata.ai/docs/values#candidacy-status
+ */
+export type CandidacyStatus = 'declared' | 'withdrew' | 'disqualified' | 'qualified';
+
+/**
+ * How a party switch is known: `announced` (dated by the person or an official record) or
+ * `ballot` (they ran under one party, then later under another).
+ */
+export type PartyChangeBasis = 'announced' | 'ballot';
+
+/** How a person's candidate records were found to be one person. */
+export type PersonLinkBasis = 'ids' | 'seat' | 'district' | 'manual' | 'single';
+
+/** What kind of name a person's other name is. */
+export type PersonNameKind = 'ballot' | 'former' | 'nickname' | 'alias';
+
+/**
  * Why a contest is not printed on the ballot (`on_ballot` is false).
  *
  * - `unopposed`: No more candidates filed than seats, so the state or county left the race off the ballot
@@ -1033,8 +1070,98 @@ export interface Choice {
   party: Party | null;
   /** The party text exactly as printed, where it differs (fusion lines, top-two preferences). */
   party_label: string | null;
+  /**
+   * Fusion: every party line the candidate is printed on, in ballot order, with votes per line where
+   * the source splits them. Empty for a candidate on one line and for measure answers (API 1.14.0).
+   */
+  party_lines: PartyLine[];
+  /** The candidate's status; null for a measure answer (API 1.14.0). */
+  status: ChoiceStatus | null;
   /** This choice's votes, once the contest has a result; null before then. */
   result: ChoiceResult | null;
+}
+
+/** One party line a candidate is printed on (fusion voting). */
+export interface PartyLine {
+  /** 1 for the line printed first (usually their own party), then 2, 3… */
+  order: number;
+  /** The party, where there is a party record for the line. */
+  party: Party | null;
+  /** The line as printed: "Working Families". */
+  label: string;
+  /** Votes on this line, where the source reports lines separately. The choice's result.votes is the total. */
+  votes: number | null;
+}
+
+/** Someone in a race who isn't a printed line: declared, withdrew before printing, disqualified, or a write-in. */
+export interface Candidacy {
+  id: number;
+  name: string;
+  /** Their candidate record, where they have one. */
+  candidate_id: number | null;
+  party: Party | null;
+  party_label: string | null;
+  status: CandidacyStatus;
+  /** A write-in campaign. */
+  write_in: boolean;
+  /** When they declared, withdrew, were disqualified or qualified. */
+  status_date: DateString | null;
+  /** Write-in votes counted for them, where the result counts them by name. */
+  votes: number | null;
+  winner: boolean | null;
+  note: string | null;
+  /** The official list or notice it comes from. */
+  source: { name: string | null; url: string; read_on: DateString | null } | null;
+}
+
+/** A party switch. */
+export interface PersonPartyChange {
+  /** The day of the switch (`announced`) or the later election's day (`ballot`). */
+  on: DateString;
+  from: Party | null;
+  to: Party | null;
+  basis: PartyChangeBasis;
+  /** `ballot`: the earlier contest, under the old party. */
+  prior_contest_id: number | null;
+  /** `ballot`: the later contest, under the new party. */
+  contest_id: number | null;
+  source: { name: string | null; url: string } | null;
+  note: string | null;
+}
+
+/** The person behind a candidate record, across elections and offices (API 1.14.0). */
+export interface Person {
+  id: number;
+  /** Permanent slug: `client.candidates.list({ person: slug })` finds every record for them. */
+  slug: string;
+  /** The name they use now. */
+  full_name: string;
+  link_basis: PersonLinkBasis;
+  /** Every candidate record for this person. */
+  candidate_ids: number[];
+  /** Other names they appeared under, such as a name before marriage. */
+  other_names: { name: string; kind: PersonNameKind; first_used: DateString | null; last_used: DateString | null }[];
+  /** Party switches, oldest first. */
+  party_changes: PersonPartyChange[];
+}
+
+/** An endorsement the endorser took back (API 1.14.0). It isn't counted anywhere else. */
+export interface RescindedEndorsement {
+  /** The id the endorsement had. */
+  endorsement_id: number;
+  endorser: EndorserRef;
+  choice_id: number;
+  label: string;
+  measure_answer: MeasureAnswer | null;
+  rank: number | null;
+  statement: string | null;
+  source_url: string | null;
+  published_on: DateString | null;
+  /** When the endorser took it back. */
+  rescinded_on: DateString;
+  rescinded_source_url: string | null;
+  /** What they said when taking it back. */
+  rescinded_statement: string | null;
 }
 
 /** A contest without its choices, as embedded in an {@link EndorsementDetail}. */
@@ -1092,6 +1219,8 @@ export interface ContestBase {
 /** A contest with every choice, in ballot order. */
 export interface Contest extends ContestBase {
   choices: Choice[];
+  /** People in the race who aren't printed lines: declared, withdrew before printing, disqualified, write-ins (API 1.14.0). */
+  other_candidates: Candidacy[];
 }
 
 /** One choice an endorser picked, inside a {@link Position}. */
@@ -1132,6 +1261,8 @@ export interface Position {
 export interface ContestDetail extends Contest {
   /** Every (matching) endorser's position, by endorser name. */
   endorsements: Position[];
+  /** Endorsements (from matching endorsers) taken back, by endorser name (API 1.14.0). */
+  rescinded_endorsements: RescindedEndorsement[];
 }
 
 // ---------------------------------------------------------------- endorsers
@@ -1857,6 +1988,8 @@ export interface ListCandidatesParams extends LangParams, PageParams {
   incumbent?: boolean;
   /** Only elections from yesterday on. */
   upcoming?: boolean;
+  /** A person's slug ({@link Person}): every candidate record for that person (API 1.14.0). */
+  person?: string;
 }
 
 /** Parameters for {@link IssuePositionsResource.list}. */
@@ -2005,8 +2138,12 @@ export interface CandidateContest {
     label: string;
     ballot_designation: string | null;
     withdrawn: boolean;
+    /** on_ballot, withdrew_still_on_ballot, advanced, won or lost (API 1.14.0). */
+    status: ChoiceStatus;
     party: Party | null;
     party_label: string | null;
+    /** Fusion: every party line they're printed on, with votes per line where split (API 1.14.0). */
+    party_lines: PartyLine[];
     /** The candidate's votes and whether they won, once the contest has a result. */
     result: ChoiceResult | null;
   };
@@ -2031,6 +2168,8 @@ export interface CandidateSummary {
   background: CandidateBackground;
   /** Published ideology scores (API 1.8.0). */
   ideology: CandidateIdeology;
+  /** The person across elections: other records, other names, party switches (API 1.14.0). */
+  person: Person | null;
   /** The contests they're on that you can read, newest election first. */
   contests: CandidateContest[];
 }
@@ -2053,7 +2192,9 @@ export interface CandidateEndorsement {
 
 /** A candidate with every endorsement they received, from {@link CandidatesResource.get}. */
 export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
-  contests: (CandidateContest & { endorsements: CandidateEndorsement[] })[];
+  contests: (CandidateContest & { endorsements: CandidateEndorsement[]; rescinded_endorsements: RescindedEndorsement[] })[];
+  /** Races they were in without being printed (declared, withdrew before printing, disqualified, write-in) (API 1.14.0). */
+  other_candidacies: { contest: { id: number; title: string }; election: { slug: string; date: DateString }; candidacy: Candidacy }[];
   /** FEC campaign finance totals, newest cycle first; empty without an FEC id. */
   finance: Finance[];
   /** Where they stand on common issues, in issue order. Empty where there are none yet. */
@@ -2141,7 +2282,7 @@ export interface IssuePositionItem extends IssuePosition {
 // ------------------------------------------------------------------ exports
 
 /** A contest in an {@link ElectionExport}: its election is given once at the top. */
-export type ExportContest = Omit<ContestBase, 'election'> & { choices: Choice[]; endorsements: Position[] };
+export type ExportContest = Omit<ContestBase, 'election'> & { choices: Choice[]; other_candidates: Candidacy[]; endorsements: Position[] };
 
 /** A whole election, from {@link ElectionsResource.export}. */
 export interface ElectionExport {
