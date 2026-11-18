@@ -14,6 +14,7 @@ For BallotData API 1.14.0.
   `CandidateDetail.other_candidacies` lists races they were in without being printed.
 - `rescinded_endorsements` (`RescindedEndorsement`) on `ContestDetail` and on each of a
   `CandidateDetail`'s contests: endorsements the endorser took back.
+- README: a section on fusion tickets, withdrawals, write-ins and party switches.
 
 ## 2.8.0
 
