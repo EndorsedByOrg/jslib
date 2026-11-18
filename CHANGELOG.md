@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.10.0
+
+For BallotData API 1.15.0.
+
+- `PersonPartyChange.after`: every party switch is dated. For a `ballot` switch, `after` is their last
+  election under the old party and `on` their first under the new one (a primary counts), so the switch
+  happened between them; `after` is `null` when `on` is the day (`announced`).
+
 ## 2.9.0
 
 For BallotData API 1.14.0.

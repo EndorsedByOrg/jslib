@@ -265,11 +265,12 @@ for (const r of contest.rescinded_endorsements) console.log(r.endorser.name, 'to
 ```
 
 A candidate record's `person` follows one person across elections, with the names they ran under and
-their party switches (`announced`, or `ballot` when they ran under one party and later another):
+their party switches, each dated: `announced` has the day in `on`; `ballot` (they ran under one party and
+later another) happened after `after` and on or before `on`:
 
 ```js
 const { person } = await client.candidates.get(8811);
-for (const ch of person?.party_changes ?? []) console.log(ch.on, ch.from?.name, '->', ch.to?.name, ch.basis);
+for (const ch of person?.party_changes ?? []) console.log(ch.after ? `${ch.after} to ${ch.on}` : ch.on, ch.from?.name, '->', ch.to?.name, ch.basis);
 if (person) {
   const { data: records } = await client.candidates.list({ person: person.slug });
   console.log(records.length, 'candidate records');
