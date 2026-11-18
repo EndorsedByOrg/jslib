@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.9.0
+
+For BallotData API 1.14.0.
+
+- Fusion voting: `Choice.party_lines` (`PartyLine`) lists every party line a candidate is printed on,
+  with votes per line where the source splits them.
+- `Choice.status` (`ChoiceStatus`): `on_ballot`, `withdrew_still_on_ballot`, `advanced`, `won` or `lost`.
+- `Contest.other_candidates` (`Candidacy`, `CandidacyStatus`): people in the race who aren't printed:
+  declared, withdrew before printing, disqualified, and write-ins.
+- `CandidateSummary.person` (`Person`, `PersonPartyChange`): one person across elections, with other names
+  and party switches; `client.candidates.list({ person })` finds all of a person's records.
+  `CandidateDetail.other_candidacies` lists races they were in without being printed.
+- `rescinded_endorsements` (`RescindedEndorsement`) on `ContestDetail` and on each of a
+  `CandidateDetail`'s contests: endorsements the endorser took back.
+
 ## 2.8.0
 
 For BallotData API 1.13.0.
