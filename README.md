@@ -245,6 +245,37 @@ for await (const p of client.issuePositions.list({ issues: 'abortion', states: '
 }
 ```
 
+### Fusion tickets, withdrawals, write-ins and party switches
+
+A contest's `choices` are exactly the printed ballot. Each candidate choice has a `status`
+(`on_ballot`, `withdrew_still_on_ballot`, `advanced`, `won` or `lost`), and `party_lines` where the
+candidate appears on more than one party's line (fusion voting in New York, Connecticut and Vermont),
+in printed order with each line's `votes` where the source reports them. People who aren't on the
+printed ballot (declared, withdrew before printing, disqualified, or qualified write-ins) are in the
+contest's `other_candidates`. Endorsements an endorser took back are in `rescinded_endorsements`.
+
+```js
+const contest = await client.contests.get(4410);
+for (const choice of contest.choices) {
+  const lines = choice.party_lines.map((l) => l.label).join(' / ');
+  console.log(choice.label, choice.status, lines);
+}
+for (const c of contest.other_candidates) console.log(c.name, c.status, c.write_in ? 'write-in' : '');
+for (const r of contest.rescinded_endorsements) console.log(r.endorser.name, 'took back', r.label, r.rescinded_on);
+```
+
+A candidate record's `person` follows one person across elections, with the names they ran under and
+their party switches (`announced`, or `ballot` when they ran under one party and later another):
+
+```js
+const { person } = await client.candidates.get(8811);
+for (const ch of person?.party_changes ?? []) console.log(ch.on, ch.from?.name, '->', ch.to?.name, ch.basis);
+if (person) {
+  const { data: records } = await client.candidates.list({ person: person.slug });
+  console.log(records.length, 'candidate records');
+}
+```
+
 ### Keeping a copy up to date
 
 Load an election once with `client.elections.export(slug)` (or `{ format: 'csv' }` for a CSV), then
