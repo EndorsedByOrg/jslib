@@ -1116,8 +1116,16 @@ export interface Candidacy {
 
 /** A party switch. */
 export interface PersonPartyChange {
-  /** The day of the switch (`announced`) or the later election's day (`ballot`). */
+  /**
+   * `announced`: the day of the switch. `ballot`: their first election under the new party,
+   * so the switch was on or before this day (API 1.15.0; before, the later general's day).
+   */
   on: DateString;
+  /**
+   * `ballot`: their last election under the old party, so the switch was after this day.
+   * `null` when `on` is the day of the switch (API 1.15.0).
+   */
+  after: DateString | null;
   from: Party | null;
   to: Party | null;
   basis: PartyChangeBasis;
