@@ -13,7 +13,9 @@ export type CsvPath =
   | '/v1/endorsements'
   | '/v1/candidates'
   | '/v1/issue-positions'
+  | '/v1/committee-contributions'
   | '/v1/officeholders'
+  | '/v1/results'
   | '/v1/offices'
   | '/v1/office-terms'
   | `/v1/endorsers/${string}/record`
