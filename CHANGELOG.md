@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0
+
+For BallotData API 1.19.0.
+
+- `CandidateDetail.outside_spending` (`CandidateOutsideSpending`, `OutsideSpendingBySpender`): FEC independent
+  expenditures and union and corporate communication costs for or against the candidate, per cycle and by
+  spender, with first and last dates, naming the spender when it is one of our endorsers.
+- `EndorserDetail.outside_spending` (`EndorserOutsideSpending`, `OutsideSpendingByCandidate`): what the
+  endorser's FEC committees spent, by candidate. Spending is not an endorsement.
+
 ## 2.11.0
 
 For BallotData API 1.18.0.
