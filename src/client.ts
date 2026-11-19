@@ -7,6 +7,7 @@ import { ElectionsResource } from './resources/elections.js';
 import { EndorsementsResource } from './resources/endorsements.js';
 import { CsvResource } from './resources/csv.js';
 import { EndorsersResource } from './resources/endorsers.js';
+import { CommitteeContributionsResource } from './resources/committee-contributions.js';
 import { IssuePositionsResource, IssuesResource } from './resources/issues.js';
 import { OfficeholdersResource } from './resources/officeholders.js';
 import { OfficesResource, OfficeTermsResource } from './resources/offices.js';
@@ -56,6 +57,8 @@ export class BallotData {
   readonly measureTopics: MeasureTopicsResource;
   /** `GET /v1/issue-positions`. */
   readonly issuePositions: IssuePositionsResource;
+  /** `GET /v1/committee-contributions`. */
+  readonly committeeContributions: CommitteeContributionsResource;
   /** `GET /v1/officeholders`, `GET /v1/officeholders/{id}`. */
   readonly officeholders: OfficeholdersResource;
   /** `GET /v1/offices`, `GET /v1/offices/{slug}`. */
@@ -98,6 +101,7 @@ export class BallotData {
     this.issues = new IssuesResource(transport);
     this.measureTopics = new MeasureTopicsResource(transport);
     this.issuePositions = new IssuePositionsResource(transport);
+    this.committeeContributions = new CommitteeContributionsResource(transport);
     this.officeholders = new OfficeholdersResource(transport);
     this.offices = new OfficesResource(transport);
     this.officeTerms = new OfficeTermsResource(transport);

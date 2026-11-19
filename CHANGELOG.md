@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.12.0
+## 2.13.0
 
 For BallotData API 1.20.0.
 
@@ -8,6 +8,18 @@ For BallotData API 1.20.0.
   committee spent money on in each cycle, from its FEC operating expenditures: totals by category
   (advertising, fundraising, consulting, staff, mail and printing, polling…) and the ten businesses and
   organizations it paid most.
+
+## 2.12.0
+
+For BallotData API 1.19.0.
+
+- `client.committeeContributions.list()` (`GET /v1/committee-contributions`, `CommitteeContribution`,
+  `CommitteeRef`): what PACs, parties and other committees gave federal candidates, one row per
+  contribution as filed with the FEC, by candidate, committee, endorser, type, cycle, state or amount.
+  Ids are strings (the FEC's 19-digit row id).
+- `CandidateDetail.contributions_from_committees` (`CommitteeContributionsReceived`) and
+  `EndorserDetail.contributions_to_candidates` (`CommitteeContributionsGiven`): per-cycle totals with the
+  ten largest givers or recipients.
 
 ## 2.11.0
 

@@ -1109,6 +1109,84 @@ export interface CommitteeFinance {
   source_url: string;
 }
 
+// ---------------------------------------------------- committee contributions
+
+/** {@link CommitteeContribution.type}: money, goods and services, or party spending coordinated with the candidate (API 1.19.0). */
+export type ContributionType = 'contribution' | 'in_kind' | 'coordinated_expenditure';
+
+/** The election a contribution counts toward, as the committee reported it. */
+export type ContributionElectionStage = 'primary' | 'general' | 'runoff' | 'special' | 'convention' | 'recount' | 'other';
+
+/** A political committee that gave to candidates (API 1.19.0). */
+export interface CommitteeRef {
+  /** FEC committee id (C########). */
+  fec_committee_id: string;
+  /** Registered name, from the FEC committee master file. */
+  name: string | null;
+  committee_type: FecCommitteeType | null;
+  /** The organization that sponsors the committee, as filed. */
+  connected_organization: string | null;
+  /** The endorser this committee is, or that sponsors it; null if none of ours. */
+  endorser: { slug: string; name: string } | null;
+}
+
+/** One contribution from a political committee to a federal candidate, as filed with the FEC, from {@link CommitteeContributionsResource.list} (API 1.19.0). */
+export interface CommitteeContribution {
+  /** The FEC's id for this line of the filing (SUB_ID), as text: too long for a JavaScript number. */
+  id: string;
+  /** Two-year FEC cycle, by its last year: 2026 = 2025-2026. */
+  cycle: number;
+  type: ContributionType;
+  /** The FEC transaction type: 24K, 24Z or 24C. */
+  transaction_type: string;
+  /** Dollars; negative for a refund. */
+  amount: number;
+  date: DateString | null;
+  election: { stage: ContributionElectionStage; year: number } | null;
+  committee: CommitteeRef;
+  candidate: { id: number; full_name: string; fec_candidate_id: string };
+  /** The FEC id of the committee that received it, usually the candidate's campaign. */
+  recipient_committee_id: string | null;
+  /** The FEC report it was on: Q1, M10, 12G, YE, … */
+  report_type: string | null;
+  /** The page of the filing it is on, at the FEC. */
+  source_url: string | null;
+}
+
+/** What PACs, parties and other committees gave a federal candidate in one cycle, on {@link CandidateDetail.contributions_from_committees} (API 1.19.0). */
+export interface CommitteeContributionsReceived {
+  cycle: number;
+  /** Net dollars (refunds subtracted). */
+  total: number;
+  contribution_count: number;
+  committee_count: number;
+  by_type: { contribution: number; in_kind: number; coordinated_expenditure: number };
+  /** The ten committees that gave the most, largest first. */
+  top_committees: { committee: CommitteeRef; total: number; contribution_count: number }[];
+  /** The candidate's FEC page for the cycle. */
+  source_url: string;
+}
+
+/** What an endorser's political committees gave federal candidates in one cycle, on {@link EndorserDetail.contributions_to_candidates} (API 1.19.0). */
+export interface CommitteeContributionsGiven {
+  cycle: number;
+  /** Net dollars to every candidate, not only those you can read. */
+  total: number;
+  contribution_count: number;
+  candidate_count: number;
+  /** FEC ids of the endorser's committees that gave: its own, and PACs it sponsors. */
+  committees: string[];
+  /** The ten candidates who got the most, largest first. `candidate` is null for one on no contest you can read. */
+  top_candidates: {
+    fec_candidate_id: string;
+    /** As the FEC lists it: LAST, FIRST. */
+    fec_name: string | null;
+    candidate: { id: number; full_name: string } | null;
+    total: number;
+    contribution_count: number;
+  }[];
+}
+
 /** A political committee registered with the FEC (API 1.18.0). */
 export interface FecCommittee {
   /** FEC committee id (C########). */
@@ -1431,6 +1509,8 @@ export interface EndorserDetail extends EndorserRef {
   facts: EndorserFacts;
   /** Its FEC committees with their receipts and spending: itself when it is a registered committee, and PACs it sponsors (API 1.18.0). */
   fec_committees: EndorserCommittee[];
+  /** What its committees gave federal candidates, per FEC cycle, newest first (API 1.19.0). */
+  contributions_to_candidates: CommitteeContributionsGiven[];
   /** Elections the endorser has endorsed in, newest first. */
   elections: EndorserElection[];
 }
@@ -2112,6 +2192,23 @@ export interface ListCandidatesParams extends LangParams, PageParams {
   person?: string;
 }
 
+/** Parameters for {@link CommitteeContributionsResource.list}. */
+export interface ListCommitteeContributionsParams extends PageParams {
+  /** Candidate ids. */
+  candidates?: number | readonly number[];
+  /** FEC committee ids of the givers (C########). */
+  committees?: ListParam;
+  /** Endorser slugs: contributions from their committees (their own, and PACs they sponsor). */
+  endorsers?: ListParam;
+  types?: ListParam<ContributionType>;
+  /** FEC cycles, by their last year. */
+  cycles?: number | readonly number[];
+  /** States the candidates' contests are voted in. */
+  states?: ListParam<StateCode>;
+  /** Only contributions of at least this many dollars. */
+  min_amount?: number;
+}
+
 /** Parameters for {@link IssuePositionsResource.list}. */
 export interface ListIssuePositionsParams extends PageParams {
   /** Issue slugs (from {@link IssuesResource.list}). */
@@ -2319,6 +2416,8 @@ export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   finance: Finance[];
   /** Their FEC committees: principal campaign committee first, then other authorized and joint fundraising committees and leadership PACs they sponsor (API 1.18.0). */
   fec_committees: CandidateCommittee[];
+  /** What PACs, parties and other committees gave them, per FEC cycle, newest first; empty without an FEC id (API 1.19.0). */
+  contributions_from_committees: CommitteeContributionsReceived[];
   /** What their principal campaign committee spent money on, by category, newest cycle first; empty without an FEC id or itemized spending (API 1.20.0). */
   spending: Spending[];
   /** Where they stand on common issues, in issue order. Empty where there are none yet. */
