@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0
+
+For BallotData API 1.19.0.
+
+- `client.committeeContributions.list()` (`GET /v1/committee-contributions`, `CommitteeContribution`,
+  `CommitteeRef`): what PACs, parties and other committees gave federal candidates, one row per
+  contribution as filed with the FEC, by candidate, committee, endorser, type, cycle, state or amount.
+  Ids are strings (the FEC's 19-digit row id).
+- `CandidateDetail.contributions_from_committees` (`CommitteeContributionsReceived`) and
+  `EndorserDetail.contributions_to_candidates` (`CommitteeContributionsGiven`): per-cycle totals with the
+  ten largest givers or recipients.
+
 ## 2.11.0
 
 For BallotData API 1.18.0.

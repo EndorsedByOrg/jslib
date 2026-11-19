@@ -43,6 +43,7 @@ export type { RawBody, VerifyOptions } from './postbacks.js';
 export { BallotResource } from './resources/ballot.js';
 export { CandidatesResource } from './resources/candidates.js';
 export { IssuePositionsResource, IssuesResource } from './resources/issues.js';
+export { CommitteeContributionsResource } from './resources/committee-contributions.js';
 export { ChangesResource } from './resources/changes.js';
 export { ContestsResource, MeasureTopicsResource } from './resources/contests.js';
 export { ElectionsResource } from './resources/elections.js';
