@@ -2142,6 +2142,56 @@ export interface ListElectionsParams extends LangParams, PageParams {
   from?: DateString;
   /** Elections on or before this date. */
   to?: DateString;
+  /**
+   * Search words (up to 200 characters): every word must start a word of the
+   * election's name, slug, state name or code, date, month name, year or type,
+   * such as `'georgia 2024 general'`. A number must match a whole word.
+   */
+  q?: string;
+}
+
+/** Kinds of record {@link BallotData.search} looks in. `candidate` covers people and candidate records. */
+export type SearchType = 'election' | 'contest' | 'candidate' | 'endorser' | 'office';
+
+/** What a {@link SearchMatch} is. */
+export type SearchResultType = 'election' | 'contest' | 'person' | 'candidate' | 'endorser' | 'office';
+
+/** Parameters for {@link BallotData.search}. */
+export interface SearchParams {
+  /** Search words or a slug, up to 200 characters. Up to 8 words count. */
+  q: string;
+  /** Only these kinds. All of them by default. */
+  types?: ListParam<SearchType>;
+  /** Only records in these states. Leaves out national endorsers and the nationwide election names. */
+  states?: ListParam<StateCode>;
+  /** Matches to return, 1–100. Default 20. */
+  limit?: number;
+}
+
+/** One record `GET /v1/search` found. */
+export interface SearchMatch {
+  /**
+   * `election` (slug and id, or slug only for a nationwide date and type such
+   * as `2026-11-03-general`), `contest` (id), `person` (slug, with
+   * `candidate_ids`), `candidate` (a candidate record not linked to a person;
+   * id), `endorser` (slug) or `office` (slug).
+   */
+  type: SearchResultType;
+  slug: string | null;
+  id: number | null;
+  /** Its name. */
+  label: string;
+  /** A few words to tell matches apart: state and date, district and election, category, seat. */
+  detail: string | null;
+  state: StateCode | null;
+  /** The election date: the election's, the contest's, or a person's latest. */
+  date: DateString | null;
+  /** The API path that gets it (for an election, its contests). */
+  path: string;
+  /** A person's candidate records. Only on `type: 'person'`. */
+  candidate_ids?: number[];
+  /** 0 the slug or whole name, 1 the name starts with the words, 2 every word starts a word of the name, 3 matched elsewhere. */
+  match: number;
 }
 
 /** Parameters for {@link CoverageResource.list}. */

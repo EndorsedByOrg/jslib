@@ -13,6 +13,7 @@ const spec = JSON.parse(readFileSync(new URL('./openapi.json', import.meta.url),
 const CALLS = {
   listStates: (c) => c.states.list(),
   listElections: (c, q) => c.elections.list(q),
+  search: (c, q) => c.search(q),
   getCoverage: (c, q) => c.coverage.list(q),
   listContests: (c, q) => c.contests.list(q),
   getContest: (c, q) => c.contests.get(4410, q),

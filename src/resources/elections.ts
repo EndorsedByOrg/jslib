@@ -7,7 +7,9 @@ export class ElectionsResource extends Resource {
   /**
    * Elections, with their voting rules in `details` (all-mail, ranked choice,
    * fusion, runoff dates) and how many contests and endorsements each has.
-   * Use an election's `slug` to ask for its contests or endorsements.
+   * Use an election's `slug` to ask for its contests or endorsements. `q`
+   * finds elections by words (`'georgia 2024 general'`); `client.search` finds
+   * the nationwide names (`2026-11-03-general`) and everything else by name.
    *
    * Paged: limit 1–500, default 100. Await for one page, or iterate with
    * `for await` for every election.

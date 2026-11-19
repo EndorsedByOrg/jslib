@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.15.0
+
+For BallotData API 1.22.0.
+
+- `client.search({ q, types, states, limit })` (`GET /v1/search`): the slug or id of anything by name, best match
+  first, as `SearchMatch` records: elections (with the nationwide names such as `2026-11-03-general`), contests,
+  people and candidate records, endorsers and offices.
+- `client.elections.list({ q })`: find elections by words of their name, state, date, month, year or type.
+
 ## 2.14.0
 
 For BallotData API 1.21.0.
