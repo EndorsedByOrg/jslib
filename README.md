@@ -90,6 +90,7 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.states.list()` | `GET /v1/states` | `State[]` |
 | `client.coverage.list({ upcoming })` | `GET /v1/coverage` | `Coverage[]` |
 | `client.elections.list(params)` | `GET /v1/elections` | pages of `ElectionSummary` |
+| `client.search(params)` | `GET /v1/search` | `SearchMatch[]`, best first |
 | `client.elections.export(slug, { format, lang })` | `GET /v1/elections/{slug}/export` | `ElectionExport`, or CSV text with `format: 'csv'` |
 | `client.contests.list(params)` | `GET /v1/contests` | pages of `Contest` |
 | `client.contests.get(id, params)` | `GET /v1/contests/{id}` | `ContestDetail` (with every endorser's position) |

@@ -15,7 +15,7 @@ import { ResultsResource, SeatChangesResource } from './resources/results.js';
 import { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 import { EventsResource, StreamResource } from './resources/stream.js';
 import { SubscriptionsResource } from './resources/subscriptions.js';
-import type { ResponseInfo } from './types.js';
+import type { ResponseInfo, SearchMatch, SearchParams } from './types.js';
 
 /**
  * A client for the BallotData API.
@@ -111,6 +111,21 @@ export class BallotData {
     this.events = new EventsResource(transport);
     this.subscriptions = new SubscriptionsResource(transport);
     this.csv = new CsvResource(transport);
+  }
+
+  /**
+   * `GET /v1/search`: find the slug or id of anything by name, in one call.
+   * Elections (with the nationwide `2026-11-03-general` and `2026-11-03`),
+   * contests, people and candidate records, endorsers and offices, best match
+   * first. One page; narrow with `types` and `states`.
+   *
+   * @example
+   * const matches = await client.search({ q: 'georgia senate 43' });
+   * const office = matches.find((m) => m.type === 'office');
+   */
+  async search(params: SearchParams, options?: RequestOptions): Promise<SearchMatch[]> {
+    const res = await this.#transport.request<{ data: SearchMatch[] }>({ method: 'GET', path: '/v1/search', query: { ...params }, options });
+    return res.data;
   }
 
   /** The API origin requests go to. */
