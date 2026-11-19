@@ -2192,6 +2192,12 @@ export interface LangParams {
   lang?: Lang;
 }
 
+/** Parameters for {@link CandidatesResource.get} and {@link EndorsersResource.get}. */
+export interface DetailWithSpendingParams extends LangParams {
+  /** FEC cycles, by their last year (such as 2024), that `outside_spending` shows. Default: every cycle. */
+  outside_spending_cycles?: number | readonly number[];
+}
+
 /** Paging on list endpoints. */
 export interface PageParams {
   /** Results per page. The maximum differs by endpoint. */
