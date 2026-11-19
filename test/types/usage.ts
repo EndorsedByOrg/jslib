@@ -102,6 +102,9 @@ async function usage(): Promise<void> {
 
   // fields on every read: a string or a list, in the parameters or the request options
   await client.contests.list({ elections: 'ca-2026-11-03-general', fields: 'id,title,choices(label,party)' });
+  // Searching every election, newest first.
+  const searched: Page<Contest> = await client.contests.list({ q: 'seattle mayor', candidate: 'lurie', from: '2024-01-01', to: '2026-12-31', sort: 'newest' });
+  void searched;
   await client.endorsements.list({ fields: ['endorser.name', 'choice.label'] });
   await client.states.list({ fields: 'code,name' });
   await client.ballot.lookup({ address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' }, { fields: 'districts.name' });

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.18.1
+
+- `ListContestsParams` has `q`, `candidate`, `from`, `to` and `sort` (the new `ContestSort` type), which
+  `client.contests.list` already sent: searching every election, such as
+  `client.contests.list({ q: 'seattle mayor', sort: 'newest' })`, no longer needs a cast in TypeScript.
+
 ## 2.18.0
 
 For BallotData API 1.25.0.

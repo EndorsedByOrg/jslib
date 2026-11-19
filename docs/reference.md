@@ -152,7 +152,16 @@ cast in the jurisdiction), where an official source covers the area; see
 | `levels` | `ListParam<Level>` | `federal`, `state`, `county`, `city`, `school`, `special`. |
 | `contest_kinds` | `ListParam<ContestKind>` | `candidate`, `measure`, `retention`. |
 | `districts` | `ListParam` | OCD division ids. |
+| `offices` | `ListParam<ContestOfficeType>` | Only contests for these offices. |
+| `topics` | `ListParam<MeasureTopicSlug>` | Only measures on any of these topics. |
+| `q` | `string` | Search words across every election: title, measure code, district, state, election, year, office or a candidate's name. |
+| `candidate` | `string` | Only contests with a candidate whose name has every one of these words. |
+| `from`, `to` | `string` | Only contests in elections on or after / on or before these dates (`YYYY-MM-DD`). |
+| `sort` | `ContestSort` | `id` (the default) or `newest` (newest election first). |
 | `upcoming` | `boolean` | |
+| `has_result` | `boolean` | Only contests with (`true`) or without (`false`) a result. |
+| `on_ballot` | `boolean` | Only races printed on the ballot (`true`) or left off it (`false`). |
+| `result_statuses` | `ListParam<ResultStatus>` | Only contests whose result has one of these statuses. |
 | `lang` | `'en' \| 'es'` | |
 | `limit` | `number` | 1–200, default 50. |
 | `cursor` | `string` | |
