@@ -2300,6 +2300,9 @@ export interface CoverageParams extends FieldsParams {
   upcoming?: boolean;
 }
 
+/** The order of `client.contests.list()`: `id` (by contest id, the default) or `newest` (newest election first, then by contest id). */
+export type ContestSort = 'id' | 'newest';
+
 /** Parameters for {@link ContestsResource.list}. Limit 1–200, default 50. */
 export interface ListContestsParams extends LangParams, PageParams {
   elections?: ListParam;
@@ -2312,6 +2315,26 @@ export interface ListContestsParams extends LangParams, PageParams {
   offices?: ListParam<ContestOfficeType>;
   /** Only measures on any of these topics. */
   topics?: ListParam<MeasureTopicSlug>;
+  /**
+   * Search words, up to 200 characters: every word must start a word of the
+   * contest's title or short title, measure code, district, state, election
+   * name, election year, office type or a candidate's name on the ballot.
+   * Needs no election, so it searches every election the account can read.
+   */
+  q?: string;
+  /** Only contests with a candidate whose name has every one of these words. */
+  candidate?: string;
+  /** Only contests in elections on or after this date. */
+  from?: DateString;
+  /** Only contests in elections on or before this date. */
+  to?: DateString;
+  /**
+   * The order: `id` (by contest id, the default) or `newest` (newest election
+   * first). A cursor works only with the sort it came from.
+   *
+   * Every value and its meaning: https://api.ballotdata.ai/docs/values#contest-sort
+   */
+  sort?: ContestSort;
   /** Only elections from yesterday on. */
   upcoming?: boolean;
   /** true: only contests with a result; false: only those without one yet. */
