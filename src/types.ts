@@ -2186,8 +2186,34 @@ export interface Postback {
 
 // --------------------------------------------------------------- parameters
 
+/**
+ * Which fields of each record to return (`fields=`): field paths, as one
+ * comma-separated string or a list. A dot reaches into a nested object or
+ * into every item of a list (`choices.label`); parentheses group several
+ * under one (`choices(label,party)`). A field named alone comes back whole.
+ * See https://api.ballotdata.ai/docs/fields.
+ *
+ * @example 'id,title,choices(label,party)'
+ * @example ['id', 'title', 'choices.label']
+ */
+export type Fields = string | readonly string[];
+
+/**
+ * `fields` on every read. The response holds only the fields named; the
+ * result is still typed as the whole record, so treat fields you didn't ask
+ * for as missing. Paging (`next_cursor`) is unaffected. An unknown field is a
+ * `BadRequestError` (`invalid_parameter`) listing the fields there.
+ * With CSV (`client.csv`), it picks the columns copied from those fields;
+ * on `client.elections.export(slug, { format: 'csv' })` it names the CSV's
+ * columns.
+ */
+export interface FieldsParams {
+  /** Only these fields of each record. See {@link Fields}. Default: every field. */
+  fields?: Fields;
+}
+
 /** `lang` on endpoints that return ballot text. */
-export interface LangParams {
+export interface LangParams extends FieldsParams {
   /** `es` for Spanish ballot text where the state publishes it. Default `en`. */
   lang?: Lang;
 }
@@ -2199,7 +2225,7 @@ export interface DetailWithSpendingParams extends LangParams {
 }
 
 /** Paging on list endpoints. */
-export interface PageParams {
+export interface PageParams extends FieldsParams {
   /** Results per page. The maximum differs by endpoint. */
   limit?: number;
   /** The `next_cursor` from the previous page. */
@@ -2231,7 +2257,7 @@ export type SearchType = 'election' | 'contest' | 'candidate' | 'endorser' | 'of
 export type SearchResultType = 'election' | 'contest' | 'person' | 'candidate' | 'endorser' | 'office';
 
 /** Parameters for {@link BallotData.search}. */
-export interface SearchParams {
+export interface SearchParams extends FieldsParams {
   /** Search words or a slug, up to 200 characters. Up to 8 words count. */
   q: string;
   /** Only these kinds. All of them by default. */
@@ -2269,7 +2295,7 @@ export interface SearchMatch {
 }
 
 /** Parameters for {@link CoverageResource.list}. */
-export interface CoverageParams {
+export interface CoverageParams extends FieldsParams {
   /** Count only upcoming elections. Default true. */
   upcoming?: boolean;
 }
@@ -2488,7 +2514,7 @@ export interface StreamParams {
 }
 
 /** Parameters for {@link EventsResource.list}. */
-export interface ListEventsParams extends StreamParams {
+export interface ListEventsParams extends StreamParams, FieldsParams {
   /** Events per page, 1–1000. Default 100. */
   limit?: number;
   /** Seconds (0–25) to hold the request open until a matching change arrives. Default 0. */
@@ -2933,7 +2959,7 @@ export interface SeatChangeSummary {
 }
 
 /** Filters shared by {@link ResultsResource.list} and {@link SeatChangesResource.get}. */
-export interface ResultFilterParams {
+export interface ResultFilterParams extends FieldsParams {
   elections?: ListParam;
   /** Election years, e.g. 2024. */
   years?: number | string | readonly (number | string)[];

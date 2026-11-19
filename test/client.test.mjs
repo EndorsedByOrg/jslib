@@ -64,6 +64,23 @@ test('requests send the key, a user agent, and list parameters', async () => {
   assert.equal(req.query.get('upcoming'), 'true');
 });
 
+test('fields goes in the query, as a string or a list, from the parameters or the request options', async () => {
+  await client.contests.list({ elections: 'ca-2026-11-03-general', fields: 'id,title,choices(label,party)' });
+  assert.equal(fake.requests.at(-1).query.get('fields'), 'id,title,choices(label,party)');
+  await client.contests.list({ fields: ['id', 'choices.label'] });
+  assert.equal(fake.requests.at(-1).query.get('fields'), 'id,choices.label');
+  await client.states.list({ fields: 'code' });
+  assert.equal(fake.requests.at(-1).query.get('fields'), 'code');
+  // The fake API has no ballots; only the request matters here.
+  await client.ballot.lookup({ address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' }, { fields: ['districts.name'] }).catch(() => null);
+  const post = fake.requests.at(-1);
+  assert.equal(post.method, 'POST');
+  assert.equal(post.query.get('fields'), 'districts.name');
+  assert.deepEqual(JSON.parse(post.body), { address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' }, 'not in the body');
+  await client.states.list();
+  assert.equal(fake.requests.at(-1).query.has('fields'), false, 'left out by default');
+});
+
 test('every endpoint is reachable', async () => {
   assert.deepEqual((await client.states.list()).map((s) => s.code), ['CA']);
   assert.equal((await client.coverage.list({ upcoming: false }))[0].state, 'CA');

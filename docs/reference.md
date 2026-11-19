@@ -60,6 +60,16 @@ Every method takes these as its last argument.
 | `timeout` | `number` | Overrides the client's timeout for this request. |
 | `maxRetries` | `number` | Overrides the client's retries for this request. |
 | `headers` | `Record<string, string>` | Extra headers for this request. |
+| `fields` | `string \| string[]` | Only these fields of each record, on any method that reads data, including those without parameters (`client.states.list({ fields: 'code,name' })`). The same as a method's own `fields` parameter. |
+
+### `fields` on every read
+
+Every read method's parameters also take `fields` (the `FieldsParams` type): field paths as a
+comma-separated string or a list. A dot reaches into a nested object or into every item of a list
+(`choices.label`), parentheses group (`choices(label,party)`), and a field named alone comes back
+whole. Only the records are cut down; `next_cursor` always comes back. An unknown field is a
+`BadRequestError` (`invalid_parameter`). See [Choosing fields](https://api.ballotdata.ai/docs/fields).
+The parameter tables below leave it out, since every method takes it.
 
 ## `PagePromise`
 
