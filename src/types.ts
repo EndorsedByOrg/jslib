@@ -1027,9 +1027,90 @@ export interface Finance {
   cash_on_hand: number;
   debts: number;
   individual_contributions: number | null;
+  /** From PACs and other political committees (House and Senate candidates; API 1.18.0). */
+  committee_contributions: number | null;
+  /** From party committees (House and Senate candidates; API 1.18.0). */
+  party_contributions: number | null;
+  /** The candidate's own contributions (API 1.18.0). */
+  candidate_contributions: number | null;
+  /** Loans from the candidate (API 1.18.0). */
+  candidate_loans: number | null;
+  /** Other loans (API 1.18.0). */
+  other_loans: number | null;
+  /** Cash on hand at the start of the cycle (API 1.18.0). */
+  cash_beginning: number | null;
+  /** The FEC's incumbent (`I`), challenger (`C`) or open seat (`O`) status for the cycle (API 1.18.0). */
+  incumbent_challenger: FecIncumbentChallenger | null;
   /** The date the totals run through. */
   coverage_end: DateString | null;
   source_url: string;
+}
+
+/** `I` incumbent, `C` challenger, `O` open seat. */
+export type FecIncumbentChallenger = 'I' | 'C' | 'O';
+
+/** FEC committee type code: `Q` PAC, `O` super PAC, `H`/`S`/`P` campaign committees, `X`/`Y` party committees… (/docs/values#fec-committee-type). */
+export type FecCommitteeType = 'C' | 'D' | 'E' | 'H' | 'I' | 'N' | 'O' | 'P' | 'Q' | 'S' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z';
+/** FEC designation: `A` authorized, `B` lobbyist PAC, `D` leadership PAC, `J` joint fundraiser, `P` principal campaign committee, `U` unauthorized. */
+export type FecDesignation = 'A' | 'B' | 'D' | 'J' | 'P' | 'U';
+/** A PAC sponsor's kind: `C` corporation, `L` labor organization, `M` membership organization, `T` trade association, `V` cooperative, `W` corporation without capital stock. */
+export type FecOrganizationType = 'C' | 'L' | 'M' | 'T' | 'V' | 'W';
+
+/** A committee's FEC totals for one cycle, from the PAC and party summary file (API 1.18.0). */
+export interface CommitteeFinance {
+  /** The cycle by its last year: 2026 = 2025-2026. */
+  cycle: number;
+  receipts: number | null;
+  individual_contributions: number | null;
+  /** From other political committees. */
+  committee_contributions: number | null;
+  transfers_from_affiliates: number | null;
+  disbursements: number | null;
+  /** To candidates' and other committees. */
+  contributions_to_committees: number | null;
+  independent_expenditures: number | null;
+  /** Party coordinated expenditures. */
+  coordinated_expenditures: number | null;
+  transfers_to_affiliates: number | null;
+  cash_beginning: number | null;
+  cash_on_hand: number | null;
+  debts: number | null;
+  /** The date the totals run through. */
+  coverage_end: DateString | null;
+  source_url: string;
+}
+
+/** A political committee registered with the FEC (API 1.18.0). */
+export interface FecCommittee {
+  /** FEC committee id (C########). */
+  id: string;
+  name: string;
+  committee_type: FecCommitteeType | null;
+  designation: FecDesignation | null;
+  organization_type: FecOrganizationType | null;
+  /** Party affiliation as filed, e.g. DEM. */
+  party: string | null;
+  /** The organization that sponsors the committee, as filed. */
+  connected_organization: string | null;
+  /** The candidate (FEC candidate id) the committee is authorized or, for a leadership PAC, sponsored by. */
+  sponsor_candidate_id: string | null;
+  state: string | null;
+  /** Cycles whose FEC committee master lists it. */
+  cycles: number[];
+  /** The FEC page for the committee. */
+  url: string;
+  /** Totals, newest cycle first; empty for campaign committees (see the candidate's `finance`). */
+  finance: CommitteeFinance[];
+}
+
+/** One of an endorser's FEC committees: `fec_id` the endorser itself, `sponsor` a PAC it sponsors. */
+export interface EndorserCommittee extends FecCommittee {
+  basis: 'fec_id' | 'sponsor';
+}
+
+/** One of a candidate's FEC committees. */
+export interface CandidateCommittee extends FecCommittee {
+  role: 'principal' | 'authorized' | 'joint_fundraising' | 'leadership_pac' | 'other';
 }
 
 /** A candidate. */
@@ -1319,6 +1400,8 @@ export interface EndorserDetail extends EndorserRef {
   endorsement_count: number;
   /** Identifiers and size, with sources (API 1.8.0). */
   facts: EndorserFacts;
+  /** Its FEC committees with their receipts and spending: itself when it is a registered committee, and PACs it sponsors (API 1.18.0). */
+  fec_committees: EndorserCommittee[];
   /** Elections the endorser has endorsed in, newest first. */
   elections: EndorserElection[];
 }
@@ -2205,6 +2288,8 @@ export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   other_candidacies: { contest: { id: number; title: string }; election: { slug: string; date: DateString }; candidacy: Candidacy }[];
   /** FEC campaign finance totals, newest cycle first; empty without an FEC id. */
   finance: Finance[];
+  /** Their FEC committees: principal campaign committee first, then other authorized and joint fundraising committees and leadership PACs they sponsor (API 1.18.0). */
+  fec_committees: CandidateCommittee[];
   /** Where they stand on common issues, in issue order. Empty where there are none yet. */
   issue_positions: IssuePosition[];
 }
