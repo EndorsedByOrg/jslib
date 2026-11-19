@@ -697,7 +697,8 @@ methods return, paged the same way, and `params` are the matching list method's.
 CSV are in the [data dictionaries](https://api.ballotdata.ai/docs/dictionary#csv).
 
 `path` is one of `/v1/elections`, `/v1/coverage`, `/v1/contests`, `/v1/endorsers`,
-`/v1/endorsements`, `/v1/candidates`, `/v1/issue-positions`, `/v1/officeholders`, `/v1/offices`, `/v1/office-terms`,
+`/v1/endorsements`, `/v1/candidates`, `/v1/issue-positions`, `/v1/committee-contributions`, `/v1/officeholders`,
+`/v1/results`, `/v1/offices`, `/v1/office-terms`,
 `/v1/endorsers/{slug}/record` or `/v1/endorsers/{slug}/agreement`.
 
 ### `csv.page(path, params?, options?)` → `Promise<CsvPage>`

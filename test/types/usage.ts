@@ -78,6 +78,10 @@ async function usage(): Promise<void> {
   const json = await client.elections.export('ca-2026-11-03-general');
   const text: string | null = json.contests[0]!.ballot_text;
   void [received, incumbent, kind, csv, text];
+  // Every list that answers format=csv
+  for (const path of ['/v1/committee-contributions', '/v1/results', '/v1/offices', '/v1/office-terms'] as const) {
+    await client.csv.page(path, { limit: 10 });
+  }
 
   const decided = await client.contests.list({ elections: 'ca-2024-11-05-general', has_result: true, result_statuses: ['certified'] });
   const result = decided.data[0]?.result;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.18.2
+
+- `CsvPath` includes `/v1/committee-contributions` and `/v1/results`, which answer `format=csv`, so
+  `client.csv.page('/v1/results', { flipped: true })` type-checks.
+
 ## 2.18.1
 
 - `ListContestsParams` has `q`, `candidate`, `from`, `to` and `sort` (the new `ContestSort` type), which
