@@ -1044,6 +1044,79 @@ export interface Finance {
   /** The date the totals run through. */
   coverage_end: DateString | null;
   source_url: string;
+  /**
+   * What individuals gave, from the FEC's file of individual contributions:
+   * totals only (no donor names are kept). `null` where not loaded (2026 cycle only so far).
+   */
+  individual_donors: IndividualDonors | null;
+}
+
+/**
+ * A donor size band, by the donor's total to the candidate in the cycle:
+ * `200_or_less`, `200_to_1000`, `1000_to_3500` (the 2025-2026 limit per election) or
+ * `over_3500` (gave for both the primary and the general).
+ */
+export type DonorSizeBand = '200_or_less' | '200_to_1000' | '1000_to_3500' | 'over_3500';
+
+/**
+ * Our grouping of the occupation and employer donors state on FEC filings, by fixed
+ * keyword rules: a rough guide, not the FEC's classification.
+ */
+export type DonorOccupationGroup =
+  | 'retired' | 'not_employed' | 'homemaker' | 'student' | 'legal' | 'health' | 'education' | 'finance'
+  | 'real_estate' | 'technology' | 'government' | 'clergy_nonprofit' | 'agriculture' | 'construction_trades'
+  | 'arts_media' | 'business' | 'other' | 'not_reported';
+
+/** Itemized individual contributions in one bucket. */
+export interface DonorBucket {
+  /** Dollars. */
+  amount: number;
+  contributions: number;
+  /** Distinct donors (same name and ZIP code); `null` by month. */
+  donors: number | null;
+}
+
+/**
+ * Totals of the individual contributions to a federal candidate's campaign committees in one
+ * cycle (joint fundraising committees not counted, as in the FEC's own totals). Federal law bars
+ * using contributors' names commercially, so there are no names, addresses, employers or occupations.
+ */
+export interface IndividualDonors {
+  /** Itemized contributions, dollars: donors over $200 in the cycle plus ActBlue/WinRed gifts of any size. */
+  itemized: number;
+  itemized_contributions: number;
+  itemized_donors: number;
+  /**
+   * The itemized total on the campaign's reports. The FEC adds a report's itemized rows to its bulk
+   * file weeks after the totals, so `itemized` and the breakdowns can run short of this.
+   */
+  itemized_reported: number;
+  /** The latest contribution date among the itemized rows the breakdowns count. */
+  itemized_through: DateString | null;
+  /** Small gifts reported only as a sum, with no donor, state or count. */
+  unitemized: number;
+  /** Contributions refunded to individuals. */
+  refunds: number;
+  /** Itemized money and donors from the candidate's state. */
+  in_state: { amount: number; donors: number };
+  /** Itemized money and donors from other states. */
+  out_of_state: { amount: number; donors: number };
+  /** Itemized contributions with no state given. */
+  unknown_state: number;
+  /** Donors by their total to the candidate, smallest band first. */
+  by_size: (DonorBucket & { band: DonorSizeBand; donors: number })[];
+  /** By the donor's state (USPS code, or `unknown`), largest first. */
+  by_state: (DonorBucket & { state: string; donors: number })[];
+  /** By occupation group, largest first. */
+  by_occupation: (DonorBucket & { group: DonorOccupationGroup; donors: number })[];
+  /** By month (`YYYY-MM`, or `unknown`), oldest first. */
+  by_month: (DonorBucket & { month: string; donors: null })[];
+  /** The date the campaign's reports (`itemized_reported`, `unitemized`) run through. */
+  reported_through: DateString | null;
+  /** The date of the FEC bulk file read. */
+  file_date: DateString;
+  /** The FEC bulk file these come from. */
+  source_url: string;
 }
 
 /** Our grouping of a campaign payment, read from the purpose on its FEC report (/docs/values#spending-category). */
