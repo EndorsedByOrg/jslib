@@ -1046,6 +1046,35 @@ export interface Finance {
   source_url: string;
 }
 
+/** Our grouping of a campaign payment, read from the purpose on its FEC report (/docs/values#spending-category). */
+export type SpendingCategory =
+  | 'advertising' | 'fundraising' | 'consulting' | 'staff' | 'mail_printing' | 'texts_calls' | 'polling_research'
+  | 'processing_fees' | 'compliance_legal' | 'field_events' | 'travel' | 'office_admin' | 'contributions'
+  | 'pass_through' | 'other';
+
+/** What a federal campaign spent money on in one cycle: its FEC operating expenditures (API 1.20.0). */
+export interface Spending {
+  /** The cycle by its last year: 2026 = 2025-2026. */
+  cycle: number;
+  /** The principal campaign committees (FEC ids) whose payments these are; usually one. */
+  committee_ids: string[];
+  /** Itemized operating expenditures, dollars. */
+  total: number;
+  /** Itemized payments counted. */
+  payments: number;
+  first_on: DateString | null;
+  /** The latest payment date in the FEC file we read. */
+  last_on: DateString | null;
+  /** Spending by category, largest first. */
+  categories: { category: SpendingCategory; amount: number; payments: number }[];
+  /** The ten businesses and organizations paid most, largest first. Individuals are never listed. */
+  top_payees: { name: string; state: string | null; category: SpendingCategory; amount: number; payments: number }[];
+  source_name: string;
+  retrieved_on: DateString;
+  /** The FEC's list of these payments. */
+  source_url: string;
+}
+
 /** `I` incumbent, `C` challenger, `O` open seat. */
 export type FecIncumbentChallenger = 'I' | 'C' | 'O';
 
@@ -2290,6 +2319,8 @@ export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   finance: Finance[];
   /** Their FEC committees: principal campaign committee first, then other authorized and joint fundraising committees and leadership PACs they sponsor (API 1.18.0). */
   fec_committees: CandidateCommittee[];
+  /** What their principal campaign committee spent money on, by category, newest cycle first; empty without an FEC id or itemized spending (API 1.20.0). */
+  spending: Spending[];
   /** Where they stand on common issues, in issue order. Empty where there are none yet. */
   issue_positions: IssuePosition[];
 }
