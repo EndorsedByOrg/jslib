@@ -1148,6 +1148,72 @@ export interface Spending {
   source_url: string;
 }
 
+// ----------------------------------------------------------- outside spending
+
+/** `independent_expenditure` (24- and 48-hour notices) or `communication_cost` (a corporation's or union's Form 7 messages to its members). */
+export type OutsideSpendingKind = 'independent_expenditure' | 'communication_cost';
+/** Whether the spending was for or against the candidate, as the filer reported it. */
+export type SupportOppose = 'support' | 'oppose';
+
+/** One spender's spending for or against a candidate in one cycle, of one kind (API 1.23.0). Not an endorsement. */
+export interface OutsideSpendingBySpender {
+  kind: OutsideSpendingKind;
+  /** The spender's FEC committee id. */
+  committee_id: string;
+  committee_name: string | null;
+  support_oppose: SupportOppose;
+  /** Total of the items, dollars. */
+  amount: number;
+  /** How many items were reported. */
+  items: number;
+  /** Earliest item: the day it went out (or was paid); a communication cost's transaction date. */
+  first_date: DateString | null;
+  last_date: DateString | null;
+  /** The FEC filing of the latest item. */
+  source_url: string;
+  /** Our endorsers this committee belongs to. */
+  endorsers: { slug: string; name: string }[];
+}
+
+/** An endorser's spending for or against one federal candidate in one cycle, of one kind (API 1.23.0). Not an endorsement. */
+export interface OutsideSpendingByCandidate {
+  kind: OutsideSpendingKind;
+  /** Which of the endorser's FEC committees spent it. */
+  committee_id: string;
+  support_oppose: SupportOppose;
+  fec_candidate_id: string | null;
+  /** As the filer wrote it. */
+  candidate_name: string | null;
+  office: 'H' | 'S' | 'P' | null;
+  state: string | null;
+  district: string | null;
+  /** Our candidate records with this FEC id. */
+  candidate_ids: number[];
+  amount: number;
+  items: number;
+  first_date: DateString | null;
+  last_date: DateString | null;
+  source_url: string;
+}
+
+/** Outside spending for and against a candidate in one FEC cycle (API 1.23.0). */
+export interface CandidateOutsideSpending {
+  cycle: number;
+  support_total: number;
+  oppose_total: number;
+  /** By spender, kind and side, largest first. */
+  items: OutsideSpendingBySpender[];
+}
+
+/** What an endorser's FEC committees spent for and against candidates in one cycle (API 1.23.0). */
+export interface EndorserOutsideSpending {
+  cycle: number;
+  support_total: number;
+  oppose_total: number;
+  /** By candidate, kind and side, largest first. */
+  items: OutsideSpendingByCandidate[];
+}
+
 /** `I` incumbent, `C` challenger, `O` open seat. */
 export type FecIncumbentChallenger = 'I' | 'C' | 'O';
 
@@ -1184,13 +1250,13 @@ export interface CommitteeFinance {
 
 // ---------------------------------------------------- committee contributions
 
-/** {@link CommitteeContribution.type}: money, goods and services, or party spending coordinated with the candidate (API 1.19.0). */
+/** {@link CommitteeContribution.type}: money, goods and services, or party spending coordinated with the candidate (API 1.23.0). */
 export type ContributionType = 'contribution' | 'in_kind' | 'coordinated_expenditure';
 
 /** The election a contribution counts toward, as the committee reported it. */
 export type ContributionElectionStage = 'primary' | 'general' | 'runoff' | 'special' | 'convention' | 'recount' | 'other';
 
-/** A political committee that gave to candidates (API 1.19.0). */
+/** A political committee that gave to candidates (API 1.23.0). */
 export interface CommitteeRef {
   /** FEC committee id (C########). */
   fec_committee_id: string;
@@ -1203,7 +1269,7 @@ export interface CommitteeRef {
   endorser: { slug: string; name: string } | null;
 }
 
-/** One contribution from a political committee to a federal candidate, as filed with the FEC, from {@link CommitteeContributionsResource.list} (API 1.19.0). */
+/** One contribution from a political committee to a federal candidate, as filed with the FEC, from {@link CommitteeContributionsResource.list} (API 1.23.0). */
 export interface CommitteeContribution {
   /** The FEC's id for this line of the filing (SUB_ID), as text: too long for a JavaScript number. */
   id: string;
@@ -1226,7 +1292,7 @@ export interface CommitteeContribution {
   source_url: string | null;
 }
 
-/** What PACs, parties and other committees gave a federal candidate in one cycle, on {@link CandidateDetail.contributions_from_committees} (API 1.19.0). */
+/** What PACs, parties and other committees gave a federal candidate in one cycle, on {@link CandidateDetail.contributions_from_committees} (API 1.23.0). */
 export interface CommitteeContributionsReceived {
   cycle: number;
   /** Net dollars (refunds subtracted). */
@@ -1240,7 +1306,7 @@ export interface CommitteeContributionsReceived {
   source_url: string;
 }
 
-/** What an endorser's political committees gave federal candidates in one cycle, on {@link EndorserDetail.contributions_to_candidates} (API 1.19.0). */
+/** What an endorser's political committees gave federal candidates in one cycle, on {@link EndorserDetail.contributions_to_candidates} (API 1.23.0). */
 export interface CommitteeContributionsGiven {
   cycle: number;
   /** Net dollars to every candidate, not only those you can read. */
@@ -1582,7 +1648,9 @@ export interface EndorserDetail extends EndorserRef {
   facts: EndorserFacts;
   /** Its FEC committees with their receipts and spending: itself when it is a registered committee, and PACs it sponsors (API 1.18.0). */
   fec_committees: EndorserCommittee[];
-  /** What its committees gave federal candidates, per FEC cycle, newest first (API 1.19.0). */
+  /** What its FEC committees spent for and against federal candidates, newest cycle first. Not endorsements (API 1.23.0). */
+  outside_spending: EndorserOutsideSpending[];
+  /** What its committees gave federal candidates, per FEC cycle, newest first (API 1.23.0). */
   contributions_to_candidates: CommitteeContributionsGiven[];
   /** Elections the endorser has endorsed in, newest first. */
   elections: EndorserElection[];
@@ -2539,7 +2607,9 @@ export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   finance: Finance[];
   /** Their FEC committees: principal campaign committee first, then other authorized and joint fundraising committees and leadership PACs they sponsor (API 1.18.0). */
   fec_committees: CandidateCommittee[];
-  /** What PACs, parties and other committees gave them, per FEC cycle, newest first; empty without an FEC id (API 1.19.0). */
+  /** Outside spending for and against them, newest cycle first: FEC independent expenditures and communication costs. Not endorsements (API 1.23.0). */
+  outside_spending: CandidateOutsideSpending[];
+  /** What PACs, parties and other committees gave them, per FEC cycle, newest first; empty without an FEC id (API 1.23.0). */
   contributions_from_committees: CommitteeContributionsReceived[];
   /** What their principal campaign committee spent money on, by category, newest cycle first; empty without an FEC id or itemized spending (API 1.20.0). */
   spending: Spending[];
