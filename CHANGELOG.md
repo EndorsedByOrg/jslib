@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.11.0
+
+For BallotData API 1.18.0.
+
+- `EndorserDetail.fec_committees` (`EndorserCommittee`, `FecCommittee`, `CommitteeFinance`): the endorser's
+  FEC committees, itself when it is a registered committee (`basis: 'fec_id'`) and PACs it sponsors
+  (`basis: 'sponsor'`), each with its receipts, contributions, independent expenditures and cash on hand.
+- `CandidateDetail.fec_committees` (`CandidateCommittee`): principal campaign committee, other authorized
+  and joint fundraising committees, and leadership PACs the candidate sponsors.
+- `Finance` gains `committee_contributions`, `party_contributions`, `candidate_contributions`,
+  `candidate_loans`, `other_loans`, `cash_beginning` and `incumbent_challenger`.
+
 ## 2.10.0
 
 For BallotData API 1.15.0.
