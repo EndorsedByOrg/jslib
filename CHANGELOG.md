@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.14.0
+
+For BallotData API 1.21.0.
+
+- `Finance.individual_donors` (`IndividualDonors`, `DonorBucket`, `DonorSizeBand`, `DonorOccupationGroup`):
+  what individuals gave a federal candidate in the cycle, from the FEC's file of individual contributions.
+  Itemized and unitemized totals, refunds, in-state and out-of-state, and breakdowns by donor size, state,
+  occupation group and month. Totals only: no donor names are kept.
+
 ## 2.13.0
 
 For BallotData API 1.20.0.
