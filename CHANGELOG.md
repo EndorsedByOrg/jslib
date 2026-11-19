@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.13.0
+
+For BallotData API 1.20.0.
+
+- `CandidateDetail.spending` (`Spending`, `SpendingCategory`): what the candidate's principal campaign
+  committee spent money on in each cycle, from its FEC operating expenditures: totals by category
+  (advertising, fundraising, consulting, staff, mail and printing, polling…) and the ten businesses and
+  organizations it paid most.
+
 ## 2.12.0
 
 For BallotData API 1.19.0.
