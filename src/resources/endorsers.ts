@@ -1,5 +1,5 @@
 import type { PagePromise, RequestOptions } from '../core.js';
-import type { Endorser, EndorserDetail, LangParams, ListEndorsersParams, EndorserAgreement, EndorserAgreementParams, EndorserRecord, EndorserRecordParams } from '../types.js';
+import type { Endorser, EndorserDetail, DetailWithSpendingParams, ListEndorsersParams, EndorserAgreement, EndorserAgreementParams, EndorserRecord, EndorserRecordParams } from '../types.js';
 import { Resource, seg } from './resource.js';
 
 /** `GET /v1/endorsers`, `GET /v1/endorsers/{slug}`, and an endorser's `record` and `agreement`. */
@@ -27,7 +27,7 @@ export class EndorsersResource extends Resource {
    * const endorser = await client.endorsers.get('sf-labor-council');
    * console.log(endorser.elections[0]?.name);
    */
-  async get(slug: string, params: LangParams = {}, options?: RequestOptions): Promise<EndorserDetail> {
+  async get(slug: string, params: DetailWithSpendingParams = {}, options?: RequestOptions): Promise<EndorserDetail> {
     const res = await this.transport.request<{ data: EndorserDetail }>({
       method: 'GET',
       path: `/v1/endorsers/${seg(slug)}`,

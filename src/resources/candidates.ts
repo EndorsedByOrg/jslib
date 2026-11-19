@@ -1,5 +1,5 @@
 import type { PagePromise, RequestOptions } from '../core.js';
-import type { CandidateDetail, CandidateSummary, LangParams, ListCandidatesParams } from '../types.js';
+import type { CandidateDetail, CandidateSummary, DetailWithSpendingParams, ListCandidatesParams } from '../types.js';
 import { Resource, seg } from './resource.js';
 
 /** `GET /v1/candidates` and `GET /v1/candidates/{id}`. */
@@ -26,7 +26,7 @@ export class CandidatesResource extends Resource {
    * const c = await client.candidates.get(8811);
    * for (const { contest, endorsements } of c.contests) console.log(contest.title, endorsements.length);
    */
-  async get(id: number, params: LangParams = {}, options?: RequestOptions): Promise<CandidateDetail> {
+  async get(id: number, params: DetailWithSpendingParams = {}, options?: RequestOptions): Promise<CandidateDetail> {
     const res = await this.transport.request<{ data: CandidateDetail }>({
       method: 'GET',
       path: `/v1/candidates/${seg(id)}`,

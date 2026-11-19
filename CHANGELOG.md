@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.17.0
+
+For BallotData API 1.24.0.
+
+- `client.candidates.get(id, { outside_spending_cycles })` and `client.endorsers.get(slug, { outside_spending_cycles })`
+  (`DetailWithSpendingParams`): show `outside_spending` for only those FEC cycles, such as `2024` or `[2024, 2026]`.
+  Outside spending now covers the 2024 cycle as well as 2026.
+
 ## 2.16.0
 
 For BallotData API 1.23.0.
