@@ -46,6 +46,13 @@ export interface RequestOptions {
   maxRetries?: number;
   /** Extra headers for this request. */
   headers?: Record<string, string>;
+  /**
+   * Only these fields of each record (`fields=`), for any method, including
+   * those without parameters: `client.states.list({ fields: 'code,name' })`.
+   * A method's own `fields` parameter does the same.
+   * See https://api.ballotdata.ai/docs/fields.
+   */
+  fields?: string | readonly string[];
 }
 
 /** A page of a list: the items, and the cursor for the next page. */
@@ -266,7 +273,7 @@ export class Transport {
 
   /** Make a request, retrying where it's safe, and return the parsed JSON (undefined for 204). */
   async request<T>({ method, path, query, body, headers, responseType = 'json', options = {} }: TransportRequest): Promise<T> {
-    const url = this.url(path, query);
+    const url = this.url(path, options.fields === undefined || options.fields === null ? query : { ...query, fields: options.fields });
     const maxRetries = options.maxRetries ?? this.maxRetries;
     const timeout = options.timeout ?? this.timeout;
     const idempotent = method !== 'POST';

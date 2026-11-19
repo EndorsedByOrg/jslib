@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.18.0
+
+For BallotData API 1.25.0.
+
+- `fields` on every read: ask for only the fields you need, nested ones included, as a string
+  (`'id,title,choices(label,party)'`) or a list of paths. Every method's parameters take it
+  (`FieldsParams`, the new `Fields` type), and so do the request options (`RequestOptions.fields`), for
+  methods without parameters such as `client.states.list({ fields: 'code,name' })` and
+  `client.ballot.lookup(input, { fields })`. See the README's "Choosing fields".
+
 ## 2.17.0
 
 For BallotData API 1.24.0.

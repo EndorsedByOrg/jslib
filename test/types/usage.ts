@@ -100,6 +100,16 @@ async function usage(): Promise<void> {
   const postback = await constructPostback('{}', 't=1,v1=00', 'secret');
   postback.changes.map((c) => c.type);
 
+  // fields on every read: a string or a list, in the parameters or the request options
+  await client.contests.list({ elections: 'ca-2026-11-03-general', fields: 'id,title,choices(label,party)' });
+  await client.endorsements.list({ fields: ['endorser.name', 'choice.label'] });
+  await client.states.list({ fields: 'code,name' });
+  await client.ballot.lookup({ address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' }, { fields: 'districts.name' });
+  await client.events.list({ fields: 'id,type' });
+  await client.seatChanges.get({ fields: 'totals' });
+  // @ts-expect-error fields is text, not a number
+  await client.contests.list({ fields: 5 });
+
   // @ts-expect-error an unknown vote method is a type error
   const bad: Contest['vote_method'] = 'pick_some';
   void bad;

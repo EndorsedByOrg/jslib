@@ -31,6 +31,7 @@ for (const { endorser, picks } of contest.endorsements) {
 - [Setting up the client](#setting-up-the-client)
 - [What you can ask for](#what-you-can-ask-for)
 - [Paging](#paging)
+- [Choosing fields](#choosing-fields)
 - [Ballots: contests, choices and voting rules](#ballots-contests-choices-and-voting-rules)
 - [Endorsers and endorsements](#endorsers-and-endorsements)
 - [The Endorsement Stream](#the-endorsement-stream)
@@ -155,6 +156,37 @@ for await (const page of client.contests.list({ elections: 'ca-2026-11-03-genera
 ```
 
 To page by hand, pass the last page's `next_cursor` as `cursor`.
+
+## Choosing fields
+
+Every method that reads data takes `fields`, so the API sends only the fields you name instead of
+whole records. Give one comma-separated string or a list of paths. A dot reaches into a nested object
+or into every item of a list, and parentheses group several fields under one:
+
+```js
+// Each contest's id and title, and each choice's label and party
+const { data } = await client.contests.list({
+  elections: 'ca-2026-11-03-general',
+  fields: 'id,title,choices(label,party)',
+});
+
+// The same as a list
+await client.contests.list({ elections: 'ca-2026-11-03-general', fields: ['id', 'title', 'choices.label', 'choices.party'] });
+
+// Methods without parameters take it with the request options
+const states = await client.states.list({ fields: 'code,name' });
+const ballot = await client.ballot.lookup(
+  { address: '1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' },
+  { fields: 'elections(election.slug,contests(title,choices.label))' },
+);
+```
+
+A field named alone comes back whole. Paging works the same (`next_cursor` always comes back, and
+`for await` passes `fields` to every page). The results are still typed as whole records, so treat a
+field you didn't ask for as missing. An unknown field is a `BadRequestError` (`invalid_parameter`)
+whose message lists the fields that exist there. With `client.csv`, `fields` picks the columns copied
+from those fields; on `client.elections.export(slug, { format: 'csv' })` it names the CSV's columns.
+The [guide](https://api.ballotdata.ai/docs/fields) has the details and an example for every endpoint.
 
 ## Ballots: contests, choices and voting rules
 
