@@ -7,6 +7,7 @@ import { ElectionsResource } from './resources/elections.js';
 import { EndorsementsResource } from './resources/endorsements.js';
 import { CsvResource } from './resources/csv.js';
 import { EndorsersResource } from './resources/endorsers.js';
+import { CommitteeContributionsResource } from './resources/committee-contributions.js';
 import { IssuePositionsResource, IssuesResource } from './resources/issues.js';
 import { OfficeholdersResource } from './resources/officeholders.js';
 import { OfficesResource, OfficeTermsResource } from './resources/offices.js';
@@ -14,7 +15,7 @@ import { ResultsResource, SeatChangesResource } from './resources/results.js';
 import { CoverageResource, EndorserCategoriesResource, StatesResource } from './resources/reference.js';
 import { EventsResource, StreamResource } from './resources/stream.js';
 import { SubscriptionsResource } from './resources/subscriptions.js';
-import type { ResponseInfo } from './types.js';
+import type { ResponseInfo, SearchMatch, SearchParams } from './types.js';
 
 /**
  * A client for the BallotData API.
@@ -56,6 +57,8 @@ export class BallotData {
   readonly measureTopics: MeasureTopicsResource;
   /** `GET /v1/issue-positions`. */
   readonly issuePositions: IssuePositionsResource;
+  /** `GET /v1/committee-contributions`. */
+  readonly committeeContributions: CommitteeContributionsResource;
   /** `GET /v1/officeholders`, `GET /v1/officeholders/{id}`. */
   readonly officeholders: OfficeholdersResource;
   /** `GET /v1/offices`, `GET /v1/offices/{slug}`. */
@@ -98,6 +101,7 @@ export class BallotData {
     this.issues = new IssuesResource(transport);
     this.measureTopics = new MeasureTopicsResource(transport);
     this.issuePositions = new IssuePositionsResource(transport);
+    this.committeeContributions = new CommitteeContributionsResource(transport);
     this.officeholders = new OfficeholdersResource(transport);
     this.offices = new OfficesResource(transport);
     this.officeTerms = new OfficeTermsResource(transport);
@@ -107,6 +111,21 @@ export class BallotData {
     this.events = new EventsResource(transport);
     this.subscriptions = new SubscriptionsResource(transport);
     this.csv = new CsvResource(transport);
+  }
+
+  /**
+   * `GET /v1/search`: find the slug or id of anything by name, in one call.
+   * Elections (with the nationwide `2026-11-03-general` and `2026-11-03`),
+   * contests, people and candidate records, endorsers and offices, best match
+   * first. One page; narrow with `types` and `states`.
+   *
+   * @example
+   * const matches = await client.search({ q: 'georgia senate 43' });
+   * const office = matches.find((m) => m.type === 'office');
+   */
+  async search(params: SearchParams, options?: RequestOptions): Promise<SearchMatch[]> {
+    const res = await this.#transport.request<{ data: SearchMatch[] }>({ method: 'GET', path: '/v1/search', query: { ...params }, options });
+    return res.data;
   }
 
   /** The API origin requests go to. */

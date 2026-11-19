@@ -90,6 +90,7 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.states.list()` | `GET /v1/states` | `State[]` |
 | `client.coverage.list({ upcoming })` | `GET /v1/coverage` | `Coverage[]` |
 | `client.elections.list(params)` | `GET /v1/elections` | pages of `ElectionSummary` |
+| `client.search(params)` | `GET /v1/search` | `SearchMatch[]`, best first |
 | `client.elections.export(slug, { format, lang })` | `GET /v1/elections/{slug}/export` | `ElectionExport`, or CSV text with `format: 'csv'` |
 | `client.contests.list(params)` | `GET /v1/contests` | pages of `Contest` |
 | `client.contests.get(id, params)` | `GET /v1/contests/{id}` | `ContestDetail` (with every endorser's position) |
@@ -108,6 +109,7 @@ Every method also takes a last argument of per-request options: `{ signal, timeo
 | `client.candidates.get(id, { lang })` | `GET /v1/candidates/{id}` | `CandidateDetail` (every endorsement received, and `issue_positions`) |
 | `client.issues.list()` | `GET /v1/issues` | `Issue[]` |
 | `client.issuePositions.list(params)` | `GET /v1/issue-positions` | pages of `IssuePositionItem` |
+| `client.committeeContributions.list(params)` | `GET /v1/committee-contributions` | pages of `CommitteeContribution` |
 | `client.officeholders.list(params)` | `GET /v1/officeholders` | pages of `Officeholder` |
 | `client.officeholders.get(personId, { lang })` | `GET /v1/officeholders/{id}` | `OfficeholderDetail` |
 | `client.offices.list(params)` | `GET /v1/offices` | pages of `OfficeRecord` (seats that last across elections) |

@@ -1044,6 +1044,108 @@ export interface Finance {
   /** The date the totals run through. */
   coverage_end: DateString | null;
   source_url: string;
+  /**
+   * What individuals gave, from the FEC's file of individual contributions:
+   * totals only (no donor names are kept). `null` where not loaded (2026 cycle only so far).
+   */
+  individual_donors: IndividualDonors | null;
+}
+
+/**
+ * A donor size band, by the donor's total to the candidate in the cycle:
+ * `200_or_less`, `200_to_1000`, `1000_to_3500` (the 2025-2026 limit per election) or
+ * `over_3500` (gave for both the primary and the general).
+ */
+export type DonorSizeBand = '200_or_less' | '200_to_1000' | '1000_to_3500' | 'over_3500';
+
+/**
+ * Our grouping of the occupation and employer donors state on FEC filings, by fixed
+ * keyword rules: a rough guide, not the FEC's classification.
+ */
+export type DonorOccupationGroup =
+  | 'retired' | 'not_employed' | 'homemaker' | 'student' | 'legal' | 'health' | 'education' | 'finance'
+  | 'real_estate' | 'technology' | 'government' | 'clergy_nonprofit' | 'agriculture' | 'construction_trades'
+  | 'arts_media' | 'business' | 'other' | 'not_reported';
+
+/** Itemized individual contributions in one bucket. */
+export interface DonorBucket {
+  /** Dollars. */
+  amount: number;
+  contributions: number;
+  /** Distinct donors (same name and ZIP code); `null` by month. */
+  donors: number | null;
+}
+
+/**
+ * Totals of the individual contributions to a federal candidate's campaign committees in one
+ * cycle (joint fundraising committees not counted, as in the FEC's own totals). Federal law bars
+ * using contributors' names commercially, so there are no names, addresses, employers or occupations.
+ */
+export interface IndividualDonors {
+  /** Itemized contributions, dollars: donors over $200 in the cycle plus ActBlue/WinRed gifts of any size. */
+  itemized: number;
+  itemized_contributions: number;
+  itemized_donors: number;
+  /**
+   * The itemized total on the campaign's reports. The FEC adds a report's itemized rows to its bulk
+   * file weeks after the totals, so `itemized` and the breakdowns can run short of this.
+   */
+  itemized_reported: number;
+  /** The latest contribution date among the itemized rows the breakdowns count. */
+  itemized_through: DateString | null;
+  /** Small gifts reported only as a sum, with no donor, state or count. */
+  unitemized: number;
+  /** Contributions refunded to individuals. */
+  refunds: number;
+  /** Itemized money and donors from the candidate's state. */
+  in_state: { amount: number; donors: number };
+  /** Itemized money and donors from other states. */
+  out_of_state: { amount: number; donors: number };
+  /** Itemized contributions with no state given. */
+  unknown_state: number;
+  /** Donors by their total to the candidate, smallest band first. */
+  by_size: (DonorBucket & { band: DonorSizeBand; donors: number })[];
+  /** By the donor's state (USPS code, or `unknown`), largest first. */
+  by_state: (DonorBucket & { state: string; donors: number })[];
+  /** By occupation group, largest first. */
+  by_occupation: (DonorBucket & { group: DonorOccupationGroup; donors: number })[];
+  /** By month (`YYYY-MM`, or `unknown`), oldest first. */
+  by_month: (DonorBucket & { month: string; donors: null })[];
+  /** The date the campaign's reports (`itemized_reported`, `unitemized`) run through. */
+  reported_through: DateString | null;
+  /** The date of the FEC bulk file read. */
+  file_date: DateString;
+  /** The FEC bulk file these come from. */
+  source_url: string;
+}
+
+/** Our grouping of a campaign payment, read from the purpose on its FEC report (/docs/values#spending-category). */
+export type SpendingCategory =
+  | 'advertising' | 'fundraising' | 'consulting' | 'staff' | 'mail_printing' | 'texts_calls' | 'polling_research'
+  | 'processing_fees' | 'compliance_legal' | 'field_events' | 'travel' | 'office_admin' | 'contributions'
+  | 'pass_through' | 'other';
+
+/** What a federal campaign spent money on in one cycle: its FEC operating expenditures (API 1.20.0). */
+export interface Spending {
+  /** The cycle by its last year: 2026 = 2025-2026. */
+  cycle: number;
+  /** The principal campaign committees (FEC ids) whose payments these are; usually one. */
+  committee_ids: string[];
+  /** Itemized operating expenditures, dollars. */
+  total: number;
+  /** Itemized payments counted. */
+  payments: number;
+  first_on: DateString | null;
+  /** The latest payment date in the FEC file we read. */
+  last_on: DateString | null;
+  /** Spending by category, largest first. */
+  categories: { category: SpendingCategory; amount: number; payments: number }[];
+  /** The ten businesses and organizations paid most, largest first. Individuals are never listed. */
+  top_payees: { name: string; state: string | null; category: SpendingCategory; amount: number; payments: number }[];
+  source_name: string;
+  retrieved_on: DateString;
+  /** The FEC's list of these payments. */
+  source_url: string;
 }
 
 // ----------------------------------------------------------- outside spending
@@ -1053,7 +1155,7 @@ export type OutsideSpendingKind = 'independent_expenditure' | 'communication_cos
 /** Whether the spending was for or against the candidate, as the filer reported it. */
 export type SupportOppose = 'support' | 'oppose';
 
-/** One spender's spending for or against a candidate in one cycle, of one kind (API 1.19.0). Not an endorsement. */
+/** One spender's spending for or against a candidate in one cycle, of one kind (API 1.23.0). Not an endorsement. */
 export interface OutsideSpendingBySpender {
   kind: OutsideSpendingKind;
   /** The spender's FEC committee id. */
@@ -1073,7 +1175,7 @@ export interface OutsideSpendingBySpender {
   endorsers: { slug: string; name: string }[];
 }
 
-/** An endorser's spending for or against one federal candidate in one cycle, of one kind (API 1.19.0). Not an endorsement. */
+/** An endorser's spending for or against one federal candidate in one cycle, of one kind (API 1.23.0). Not an endorsement. */
 export interface OutsideSpendingByCandidate {
   kind: OutsideSpendingKind;
   /** Which of the endorser's FEC committees spent it. */
@@ -1094,7 +1196,7 @@ export interface OutsideSpendingByCandidate {
   source_url: string;
 }
 
-/** Outside spending for and against a candidate in one FEC cycle (API 1.19.0). */
+/** Outside spending for and against a candidate in one FEC cycle (API 1.23.0). */
 export interface CandidateOutsideSpending {
   cycle: number;
   support_total: number;
@@ -1103,7 +1205,7 @@ export interface CandidateOutsideSpending {
   items: OutsideSpendingBySpender[];
 }
 
-/** What an endorser's FEC committees spent for and against candidates in one cycle (API 1.19.0). */
+/** What an endorser's FEC committees spent for and against candidates in one cycle (API 1.23.0). */
 export interface EndorserOutsideSpending {
   cycle: number;
   support_total: number;
@@ -1144,6 +1246,84 @@ export interface CommitteeFinance {
   /** The date the totals run through. */
   coverage_end: DateString | null;
   source_url: string;
+}
+
+// ---------------------------------------------------- committee contributions
+
+/** {@link CommitteeContribution.type}: money, goods and services, or party spending coordinated with the candidate (API 1.23.0). */
+export type ContributionType = 'contribution' | 'in_kind' | 'coordinated_expenditure';
+
+/** The election a contribution counts toward, as the committee reported it. */
+export type ContributionElectionStage = 'primary' | 'general' | 'runoff' | 'special' | 'convention' | 'recount' | 'other';
+
+/** A political committee that gave to candidates (API 1.23.0). */
+export interface CommitteeRef {
+  /** FEC committee id (C########). */
+  fec_committee_id: string;
+  /** Registered name, from the FEC committee master file. */
+  name: string | null;
+  committee_type: FecCommitteeType | null;
+  /** The organization that sponsors the committee, as filed. */
+  connected_organization: string | null;
+  /** The endorser this committee is, or that sponsors it; null if none of ours. */
+  endorser: { slug: string; name: string } | null;
+}
+
+/** One contribution from a political committee to a federal candidate, as filed with the FEC, from {@link CommitteeContributionsResource.list} (API 1.23.0). */
+export interface CommitteeContribution {
+  /** The FEC's id for this line of the filing (SUB_ID), as text: too long for a JavaScript number. */
+  id: string;
+  /** Two-year FEC cycle, by its last year: 2026 = 2025-2026. */
+  cycle: number;
+  type: ContributionType;
+  /** The FEC transaction type: 24K, 24Z or 24C. */
+  transaction_type: string;
+  /** Dollars; negative for a refund. */
+  amount: number;
+  date: DateString | null;
+  election: { stage: ContributionElectionStage; year: number } | null;
+  committee: CommitteeRef;
+  candidate: { id: number; full_name: string; fec_candidate_id: string };
+  /** The FEC id of the committee that received it, usually the candidate's campaign. */
+  recipient_committee_id: string | null;
+  /** The FEC report it was on: Q1, M10, 12G, YE, … */
+  report_type: string | null;
+  /** The page of the filing it is on, at the FEC. */
+  source_url: string | null;
+}
+
+/** What PACs, parties and other committees gave a federal candidate in one cycle, on {@link CandidateDetail.contributions_from_committees} (API 1.23.0). */
+export interface CommitteeContributionsReceived {
+  cycle: number;
+  /** Net dollars (refunds subtracted). */
+  total: number;
+  contribution_count: number;
+  committee_count: number;
+  by_type: { contribution: number; in_kind: number; coordinated_expenditure: number };
+  /** The ten committees that gave the most, largest first. */
+  top_committees: { committee: CommitteeRef; total: number; contribution_count: number }[];
+  /** The candidate's FEC page for the cycle. */
+  source_url: string;
+}
+
+/** What an endorser's political committees gave federal candidates in one cycle, on {@link EndorserDetail.contributions_to_candidates} (API 1.23.0). */
+export interface CommitteeContributionsGiven {
+  cycle: number;
+  /** Net dollars to every candidate, not only those you can read. */
+  total: number;
+  contribution_count: number;
+  candidate_count: number;
+  /** FEC ids of the endorser's committees that gave: its own, and PACs it sponsors. */
+  committees: string[];
+  /** The ten candidates who got the most, largest first. `candidate` is null for one on no contest you can read. */
+  top_candidates: {
+    fec_candidate_id: string;
+    /** As the FEC lists it: LAST, FIRST. */
+    fec_name: string | null;
+    candidate: { id: number; full_name: string } | null;
+    total: number;
+    contribution_count: number;
+  }[];
 }
 
 /** A political committee registered with the FEC (API 1.18.0). */
@@ -1468,8 +1648,10 @@ export interface EndorserDetail extends EndorserRef {
   facts: EndorserFacts;
   /** Its FEC committees with their receipts and spending: itself when it is a registered committee, and PACs it sponsors (API 1.18.0). */
   fec_committees: EndorserCommittee[];
-  /** What its FEC committees spent for and against federal candidates, newest cycle first. Not endorsements (API 1.19.0). */
+  /** What its FEC committees spent for and against federal candidates, newest cycle first. Not endorsements (API 1.23.0). */
   outside_spending: EndorserOutsideSpending[];
+  /** What its committees gave federal candidates, per FEC cycle, newest first (API 1.23.0). */
+  contributions_to_candidates: CommitteeContributionsGiven[];
   /** Elections the endorser has endorsed in, newest first. */
   elections: EndorserElection[];
 }
@@ -2028,6 +2210,56 @@ export interface ListElectionsParams extends LangParams, PageParams {
   from?: DateString;
   /** Elections on or before this date. */
   to?: DateString;
+  /**
+   * Search words (up to 200 characters): every word must start a word of the
+   * election's name, slug, state name or code, date, month name, year or type,
+   * such as `'georgia 2024 general'`. A number must match a whole word.
+   */
+  q?: string;
+}
+
+/** Kinds of record {@link BallotData.search} looks in. `candidate` covers people and candidate records. */
+export type SearchType = 'election' | 'contest' | 'candidate' | 'endorser' | 'office';
+
+/** What a {@link SearchMatch} is. */
+export type SearchResultType = 'election' | 'contest' | 'person' | 'candidate' | 'endorser' | 'office';
+
+/** Parameters for {@link BallotData.search}. */
+export interface SearchParams {
+  /** Search words or a slug, up to 200 characters. Up to 8 words count. */
+  q: string;
+  /** Only these kinds. All of them by default. */
+  types?: ListParam<SearchType>;
+  /** Only records in these states. Leaves out national endorsers and the nationwide election names. */
+  states?: ListParam<StateCode>;
+  /** Matches to return, 1–100. Default 20. */
+  limit?: number;
+}
+
+/** One record `GET /v1/search` found. */
+export interface SearchMatch {
+  /**
+   * `election` (slug and id, or slug only for a nationwide date and type such
+   * as `2026-11-03-general`), `contest` (id), `person` (slug, with
+   * `candidate_ids`), `candidate` (a candidate record not linked to a person;
+   * id), `endorser` (slug) or `office` (slug).
+   */
+  type: SearchResultType;
+  slug: string | null;
+  id: number | null;
+  /** Its name. */
+  label: string;
+  /** A few words to tell matches apart: state and date, district and election, category, seat. */
+  detail: string | null;
+  state: StateCode | null;
+  /** The election date: the election's, the contest's, or a person's latest. */
+  date: DateString | null;
+  /** The API path that gets it (for an election, its contests). */
+  path: string;
+  /** A person's candidate records. Only on `type: 'person'`. */
+  candidate_ids?: number[];
+  /** 0 the slug or whole name, 1 the name starts with the words, 2 every word starts a word of the name, 3 matched elsewhere. */
+  match: number;
 }
 
 /** Parameters for {@link CoverageResource.list}. */
@@ -2149,6 +2381,23 @@ export interface ListCandidatesParams extends LangParams, PageParams {
   upcoming?: boolean;
   /** A person's slug ({@link Person}): every candidate record for that person (API 1.14.0). */
   person?: string;
+}
+
+/** Parameters for {@link CommitteeContributionsResource.list}. */
+export interface ListCommitteeContributionsParams extends PageParams {
+  /** Candidate ids. */
+  candidates?: number | readonly number[];
+  /** FEC committee ids of the givers (C########). */
+  committees?: ListParam;
+  /** Endorser slugs: contributions from their committees (their own, and PACs they sponsor). */
+  endorsers?: ListParam;
+  types?: ListParam<ContributionType>;
+  /** FEC cycles, by their last year. */
+  cycles?: number | readonly number[];
+  /** States the candidates' contests are voted in. */
+  states?: ListParam<StateCode>;
+  /** Only contributions of at least this many dollars. */
+  min_amount?: number;
 }
 
 /** Parameters for {@link IssuePositionsResource.list}. */
@@ -2358,8 +2607,12 @@ export interface CandidateDetail extends Omit<CandidateSummary, 'contests'> {
   finance: Finance[];
   /** Their FEC committees: principal campaign committee first, then other authorized and joint fundraising committees and leadership PACs they sponsor (API 1.18.0). */
   fec_committees: CandidateCommittee[];
-  /** Outside spending for and against them, newest cycle first: FEC independent expenditures and communication costs. Not endorsements (API 1.19.0). */
+  /** Outside spending for and against them, newest cycle first: FEC independent expenditures and communication costs. Not endorsements (API 1.23.0). */
   outside_spending: CandidateOutsideSpending[];
+  /** What PACs, parties and other committees gave them, per FEC cycle, newest first; empty without an FEC id (API 1.23.0). */
+  contributions_from_committees: CommitteeContributionsReceived[];
+  /** What their principal campaign committee spent money on, by category, newest cycle first; empty without an FEC id or itemized spending (API 1.20.0). */
+  spending: Spending[];
   /** Where they stand on common issues, in issue order. Empty where there are none yet. */
   issue_positions: IssuePosition[];
 }

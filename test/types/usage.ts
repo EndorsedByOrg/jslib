@@ -9,6 +9,7 @@ import {
   type EndorsementEvent,
   type Filter,
   type Page,
+  type SearchMatch,
   type StreamMessage,
 } from '../../src/index.js';
 
@@ -84,6 +85,9 @@ async function usage(): Promise<void> {
   const votes: number | null | undefined = decided.data[0]?.choices[0]?.result?.votes;
   const won: boolean | null | undefined = (await client.candidates.get(8811)).contests[0]?.choice.result?.winner;
   const historical: boolean | undefined = (await client.elections.list()).data[0]?.details.historical;
+  const found: SearchMatch[] = await client.search({ q: 'georgia senate 43', types: ['office', 'contest'], states: 'GA', limit: 5 });
+  const personIds: number[] | undefined = found.find((m) => m.type === 'person')?.candidate_ids;
+  await client.elections.list({ q: 'georgia 2024 general' });
   void [kindOfSource, votes, won, historical, result?.source.url];
 
   const flips = await client.results.list({ years: 2024, offices: 'us_representative', flipped: true, max_margin_pct: 5 });

@@ -1,14 +1,53 @@
 # Changelog
 
-## 2.12.0
+## 2.16.0
 
-For BallotData API 1.19.0.
+For BallotData API 1.23.0.
 
 - `CandidateDetail.outside_spending` (`CandidateOutsideSpending`, `OutsideSpendingBySpender`): FEC independent
   expenditures and union and corporate communication costs for or against the candidate, per cycle and by
   spender, with first and last dates, naming the spender when it is one of our endorsers.
 - `EndorserDetail.outside_spending` (`EndorserOutsideSpending`, `OutsideSpendingByCandidate`): what the
   endorser's FEC committees spent, by candidate. Spending is not an endorsement.
+
+## 2.15.0
+
+For BallotData API 1.22.0.
+
+- `client.search({ q, types, states, limit })` (`GET /v1/search`): the slug or id of anything by name, best match
+  first, as `SearchMatch` records: elections (with the nationwide names such as `2026-11-03-general`), contests,
+  people and candidate records, endorsers and offices.
+- `client.elections.list({ q })`: find elections by words of their name, state, date, month, year or type.
+
+## 2.14.0
+
+For BallotData API 1.21.0.
+
+- `Finance.individual_donors` (`IndividualDonors`, `DonorBucket`, `DonorSizeBand`, `DonorOccupationGroup`):
+  what individuals gave a federal candidate in the cycle, from the FEC's file of individual contributions.
+  Itemized and unitemized totals, refunds, in-state and out-of-state, and breakdowns by donor size, state,
+  occupation group and month. Totals only: no donor names are kept.
+
+## 2.13.0
+
+For BallotData API 1.20.0.
+
+- `CandidateDetail.spending` (`Spending`, `SpendingCategory`): what the candidate's principal campaign
+  committee spent money on in each cycle, from its FEC operating expenditures: totals by category
+  (advertising, fundraising, consulting, staff, mail and printing, polling…) and the ten businesses and
+  organizations it paid most.
+
+## 2.12.0
+
+For BallotData API 1.19.0.
+
+- `client.committeeContributions.list()` (`GET /v1/committee-contributions`, `CommitteeContribution`,
+  `CommitteeRef`): what PACs, parties and other committees gave federal candidates, one row per
+  contribution as filed with the FEC, by candidate, committee, endorser, type, cycle, state or amount.
+  Ids are strings (the FEC's 19-digit row id).
+- `CandidateDetail.contributions_from_committees` (`CommitteeContributionsReceived`) and
+  `EndorserDetail.contributions_to_candidates` (`CommitteeContributionsGiven`): per-cycle totals with the
+  ten largest givers or recipients.
 
 ## 2.11.0
 
